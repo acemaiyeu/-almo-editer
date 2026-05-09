@@ -159,7 +159,10 @@ export default function VideoWaveCut() {
         ]);
       const data = await ffmpeg.readFile("output.mp4");
       const url = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }));
-      const a = document.createElement("a");
+      let a
+      if(typeof document !== 'undefined'){
+        document.createElement("a");
+      }
       a.href = url;
       a.download = `cut_${file.name}`;
       a.click();

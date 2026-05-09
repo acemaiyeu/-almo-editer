@@ -28,7 +28,7 @@ const Editor = () => {
 
   // Inject CSS vào <head>
   useEffect(() => {
-    if (!styleElementRef.current) {
+    if (!styleElementRef.current && typeof document !== 'undefined') {
       const style = document.createElement('style');
       style.id = 'dynamic-runtime-css';
       document.head.appendChild(style);
@@ -44,7 +44,7 @@ const Editor = () => {
     `;
 
     return () => {
-      if (styleElementRef.current) {
+      if (styleElementRef.current && typeof document !== 'undefined') {
         document.head.removeChild(styleElementRef.current);
         styleElementRef.current = null;
       }

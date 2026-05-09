@@ -23,7 +23,11 @@ const ExportGuest = () => {
     recorder.onstop = () => {
       const blob = new Blob(chunks, { type: 'video/webm' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      let a;
+      if(typeof document !== 'undefined'){
+        a = document.createElement('a');
+      }
+      
       a.href = url;
       a.download = 'tiktok-client.webm';
       a.click();

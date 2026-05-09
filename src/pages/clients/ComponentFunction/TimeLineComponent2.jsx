@@ -130,7 +130,10 @@ const AlmoEditorFinal = () => {
     const url = URL.createObjectURL(file);
     const type = file.type.includes('video') ? 'video' : 'audio';
     
-    const tempElement = document.createElement(type);
+    let tempElement
+    if(typeof document !== 'undefined'){
+      tempElement = document.createElement(type);
+    }
     tempElement.src = url;
     
     tempElement.onloadedmetadata = () => {

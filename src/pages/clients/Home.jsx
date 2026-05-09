@@ -22,7 +22,7 @@ const Home = () => {
         `;
     
         return () => {
-          if (styleElementRef.current) {
+          if (styleElementRef.current && typeof document !== 'undefined') {
             document.head.removeChild(styleElementRef.current);
             styleElementRef.current = null;
           }
