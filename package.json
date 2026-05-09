@@ -1,0 +1,59 @@
+{
+  "name": "almo-review",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "start": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "@reduxjs/toolkit": "^2.11.2",
+    "@remotion/bundler": "^4.0.451",
+    "@remotion/player": "^3.3.102",
+    "@remotion/renderer": "^4.0.451",
+    "@wavesurfer/react": "^1.0.12",
+    "audiobuffer-to-wav": "^1.0.0",
+    "axios": "^1.13.4",
+    "demucs-web": "^1.0.2",
+    "dompurify": "^3.3.1",
+    "framer-motion": "^12.38.0",
+    "laravel-echo": "^2.3.1",
+    "localforage": "^1.10.0",
+    "lucide-react": "^0.563.0",
+    "onnxruntime-web": "^1.26.0",
+    "pusher-js": "^8.4.0",
+    "quill": "^2.0.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.13.0",
+    "react-toastify": "^11.0.5",
+    "recharts": "^3.7.0",
+    "remotion": "^3.3.102",
+    "sass": "^1.97.3",
+    "wavesurfer.js": "^7.12.6",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "terser": "^5.46.0",
+    "vite": "npm:rolldown-vite@7.2.5",
+    "vite-plugin-imagemin": "^0.6.1"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.2.5"
+  }
+}

@@ -1,0 +1,26 @@
+.timeline-component-container {
+  width: 100%;
+  min-height: 100px;
+  height: auto;
+  overflow: hidden;
+  overflow-x: auto;
+  // background-color: black;
+  margin: 20px auto;
+  .timeline-clock{
+      width: 90%;
+      text-align: right;
+      margin-right: 20px;
+      font-size: 1.2rem;
+      color: rgb(248, 6, 188);
+      font-weight: bold;
+  }
+  .timeline-item{
+    flex: 1;
+    height: 100%;
+    background-color: black;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

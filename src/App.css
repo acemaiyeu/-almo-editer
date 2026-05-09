@@ -1,0 +1,92 @@
+:root {
+  /* Use a color hex, rgb, or name */
+  --background-main: #f7175a; 
+  --background-main-hover: #f7175a8a; 
+  --color-main: rgb(255 9 154);
+  --color-main-rgb: 255, 9, 154;
+  /* Use px, rem, or em for font size */
+  --font-size-main: 16px; 
+  --text-white: #ffffff;
+  --bg-light: #f8f9fa;
+}
+
+#root {
+  text-align: center;
+      /* max-width: 1280px; */
+    width: 100vw;
+    height: 100vh;
+    /* margin: 0 auto; */
+    text-align: center;
+    overflow: hidden;
+    overflow-y: auto;
+}
+.spin{
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--background-main);
+  gap: 10px;
+}
+.text-almo{
+  color: var(--background-main);
+}
+.indentifi-position{
+  position: relative;
+}
+.btn-spinner{
+  background-color: var(--background-main);
+  color: white;
+}
+
+.logo {
+  height: 3rem;
+  /* padding: 1.5em; */
+  /* will-change: filter;
+  transition: filter 300ms; */
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+.page-admin{
+  width: 100%;
+  display: flex;
+}
+.page-admin>div:first-child{
+  width: 20%;
+}
+.page-admin>div:last-child{
+  flex: 1;
+}
+.table-client td{
+  height: auto !important;
+  width: 100%;
+  text-wrap: wrap;
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
