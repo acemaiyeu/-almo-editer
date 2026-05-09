@@ -65,7 +65,7 @@ export default defineConfig({
   build: {
     assetsInlineLimit: 0, 
     sourcemap: false,
-    minify: 'terser',
+    esbuild: 'terser',
     terserOptions: {
       compress: {
         drop_console: false, // SỬA THÀNH FALSE để xem lỗi AI separator là gì
