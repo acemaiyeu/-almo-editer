@@ -212,10 +212,17 @@ const AudioSeparator = () => {
           ort,
 
           onProgress: (p) => {
-
-            setProgress(
-              Math.floor(p * 100)
-            );
+            if (typeof p === 'number' && !isNaN(p)) {
+               setProgress(Math.floor(p * 100));
+            } else {
+              // Nếu p là object (thường chứa progress chi tiết), hãy log ra để xem
+              console.log("Progress data:", p); 
+              let d = p?.progress.toFixed(2) === 1 ? 100 : p?.progress.toFixed(2) * 100;
+              setProgress(Math.round(d));
+            }
+            // setProgress(
+            //   Math.floor(p * 100)
+            // );
           }
         });
 
@@ -376,11 +383,11 @@ const AudioSeparator = () => {
           }}
         >
 
-          <p>
+          <p style={{ color: "var(--color-main)"}}>
             Đang AI xử lý...
           </p>
 
-          <p>
+          <p style={{ color: "var(--color-main)"}}>
             {progress}%
           </p>
 
@@ -435,7 +442,8 @@ const AudioSeparator = () => {
 
           <a
             href={audioUrls.drums}
-            download="drums.wav"
+            download="drums.wav" 
+            style={{ color: "var(--color-main);"}}
           >
             Tải Drums
           </a>
@@ -464,6 +472,7 @@ const AudioSeparator = () => {
           <a
             href={audioUrls.bass}
             download="bass.wav"
+            style={{ color: "var(--color-main);"}}
           >
             Tải Bass
           </a>
@@ -492,6 +501,7 @@ const AudioSeparator = () => {
           <a
             href={audioUrls.other}
             download="other.wav"
+            style={{ color: "var(--color-main);"}}
           >
             Tải Other
           </a>
