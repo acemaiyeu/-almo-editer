@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { X, Download, Film, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
-import { RenderEngine, getMaxDuration, downloadVideo } from '../utils/RenderEngine.js';
+import { RenderEngine, getMaxDuration, downloadVideo } from '../utils/renderEngine.js';
 
 // ─────────────────────────────────────────────
 // Constants
