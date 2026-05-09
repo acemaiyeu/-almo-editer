@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import * as ort from 'onnxruntime-web';
 import { DemucsProcessor } from 'demucs-web';
+import { useDispatch } from 'react-redux';
+import { updateDynamic } from '../../app/features/dynamicIslandSlice';
+import { showDynamic } from '../../app/ComponentSupport/functions';
 
 const AudioSeparator = () => {
-
+  const dispatch = useDispatch();
   const [isProcessing, setIsProcessing] =
     useState(false);
 
@@ -190,6 +193,11 @@ const AudioSeparator = () => {
   // =========================
 
   const processAudio = async (e) => {
+    if(window.location.hostname !== "localhost"){
+      showDynamic(dispatch, "Chức năng đang phát triển không chạy công khai!")
+      return;
+    }
+    
 
     const file =
       e.target.files[0];
@@ -216,7 +224,6 @@ const AudioSeparator = () => {
                setProgress(Math.floor(p * 100));
             } else {
               // Nếu p là object (thường chứa progress chi tiết), hãy log ra để xem
-              console.log("Progress data:", p); 
               let d = p?.progress.toFixed(2) === 1 ? 100 : p?.progress.toFixed(2) * 100;
               setProgress(Math.round(d));
             }

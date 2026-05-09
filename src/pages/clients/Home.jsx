@@ -4,6 +4,9 @@ import FunctionComponent from "./ComponentFunction/FunctionComponent.jsx";
 import TimeLineComponent2 from "./ComponentFunction/TimeLineComponent2.jsx";
 import VideoPlayer from "./ComponentFunction/VideoPlayer.jsx";
 import '../../style/effect.css'
+import { showDynamic } from "../../app/ComponentSupport/functions.js";
+import { useDispatch } from "react-redux";
+import DynamicIsland from "./DynamicIsland.jsx";
 const Home = () => {
     const effect_custom = localStorage.getItem("effect_custom");
      const styleElementRef = useRef(null);
@@ -31,6 +34,7 @@ const Home = () => {
     
     return (
         <div className="home-container">
+          <DynamicIsland />
             <div className="top-container">
                 <FunctionComponent />
                 {/* <VideoPlayer /> */}

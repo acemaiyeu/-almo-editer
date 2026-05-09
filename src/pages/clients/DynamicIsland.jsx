@@ -51,7 +51,9 @@ const DynamicIsland = () => {
         ) : 
          <div className="di-content">
             <div className="di-text-stack">
-              <p className="di-text"><span>Almo Review</span></p>
+              <p className="di-text"><span>
+                {/* Almo Review */}
+                </span></p> 
             </div>
           </div>
           }
