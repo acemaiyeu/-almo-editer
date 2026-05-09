@@ -51,6 +51,17 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  "headers": [
+    {
+      "source": "/models/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Content-Type", "value": "application/octet-stream" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
+    }
+  ],
   optimizeDeps: {
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util', 'onnxruntime-web']
   },
