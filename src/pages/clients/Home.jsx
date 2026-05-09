@@ -10,7 +10,7 @@ const Home = () => {
     
       // Inject CSS vào <head>
       useEffect(() => {
-        if (!styleElementRef.current) {
+        if (!styleElementRef.current && typeof document !== 'undefined') {
           const style = document.createElement('style');
           style.id = 'dynamic-runtime-css';
           document.head.appendChild(style);
