@@ -45,43 +45,30 @@
 //   },
 // })
 
-
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  "headers": [
-    {
-      "source": "/models/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "Content-Type", "value": "application/octet-stream" },
-        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
-      ]
-    }
-  ],
   optimizeDeps: {
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util', 'onnxruntime-web']
   },
-  // Thêm phần này để đảm bảo Vite xử lý các file tài nguyên tĩnh đúng cách
   assetsInclude: ['**/*.onnx', '**/*.wasm'], 
   server: {
-    // ... giữ nguyên các cấu hình port/host của bạn
+    host: true,
+    port: 5173,
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
   },
   build: {
-    // Tăng giới hạn kích thước asset để tránh file onnx bị biến thành base64 inline
     assetsInlineLimit: 0, 
     sourcemap: false,
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: false, // SỬA THÀNH FALSE để xem lỗi AI separator là gì
         drop_debugger: true,
       },
     },
