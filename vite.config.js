@@ -70,7 +70,7 @@ export default defineConfig({
     terserOptions: {
       compress: {
         // drop_console: false, // SỬA THÀNH FALSE để xem lỗi AI separator là gì
-        drop_debugger: true,
+        drop_debugger: false,
       },
     },
   },

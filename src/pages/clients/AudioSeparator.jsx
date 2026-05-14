@@ -147,9 +147,16 @@ const AudioSeparator = () => {
     //   showDynamic(dispatch, "Chức năng đang phát triển không chạy công khai!")
     //   return;
     // }
+    ort.env.wasm.wasmPaths = {
+        'ort-wasm-simd-threaded.jsep.mjs': '/ort-wasm-simd-threaded.jsep.mjs',
+        'ort-wasm-simd-threaded.wasm': '/ort-wasm-simd-threaded.wasm',
+        'ort-wasm-simd-threaded.jsep.wasm': '/ort-wasm-simd-threaded.jsep.wasm',
+        'ort-wasm-simd-threaded.mjs': '/ort-wasm-simd-threaded.mjs'
+    };
 
     setIsProcessing(true);
     setProgress(0);
+
 
     try {
       const audioCtx = new AudioContext();
