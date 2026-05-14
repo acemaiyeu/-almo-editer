@@ -211,7 +211,6 @@ export class RenderEngine {
 
   renderFrame(tracks, currentTimeSec) {
     const { ctx, width, height } = this;
-console.log("renderFrame")
     // Nền đen
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, width, height);
@@ -257,7 +256,6 @@ console.log("renderFrame")
         }
       });
     });
-console.log("activeTexts",activeTexts)
     if (activeTexts.length === 0) return;
 
     ctx.save();
@@ -265,7 +263,6 @@ console.log("activeTexts",activeTexts)
     ctx.textBaseline = 'middle';
 
     activeTexts.forEach((txt, index) => {
-      console.log("activeTexts", activeTexts)
       const yOffset = (index - (activeTexts.length - 1) / 2) * 64;
       const itemTime = currentTimeSec - txt.start; // giây kể từ lúc text bắt đầu xuất hiện
       const baseX = width / 2;
@@ -536,7 +533,6 @@ console.log("activeTexts",activeTexts)
   // ─────────────────────────────────────────────
 
   async start(tracks, maxDuration) {
-    console.log("start")
     if (this.isRendering) return;
     this.isRendering = true;
     this.chunks = [];

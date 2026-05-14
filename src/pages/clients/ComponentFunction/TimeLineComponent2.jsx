@@ -534,7 +534,7 @@ const AlmoEditorFinal = () => {
 
           {/* RENDERING TRACKS */}
           {tracks.map(track => (
-            <div key={track.id} style={{ display: 'flex', minHeight: '90px', borderBottom: '1px solid #222', position: 'relative' }}>
+            <div key={track.id + Math.random()} style={{ display: 'flex', minHeight: '90px', borderBottom: '1px solid #222', position: 'relative' }}>
               <div style={{ width: '150px', background: '#111', borderRight: '1px solid #333', padding: '20px 15px', position: 'sticky', left: 0, zIndex: 20, fontSize: '12px', color: '#999', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
                 {track.name.includes('VIDEO') ? <Film size={14} /> : track.name.includes('AUDIO') ? <Music size={14} /> : <Type size={14} />}
                 {track.name}
@@ -544,7 +544,7 @@ const AlmoEditorFinal = () => {
                 {track.items.map(item => {
                   const isSelectedForMerge = selectedForMerge.find(i => i.id === item.id);
                   return (
-                    <div key={item.id}
+                    <div key={item.id + Math.random()}
                       onContextMenu={(e) => {
                         if (item.type !== 'text') return;
                         e.preventDefault();

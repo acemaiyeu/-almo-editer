@@ -1,0 +1,102 @@
+.audio-item {
+    display: flex;
+    justify-content: center; // Căn đều các phần tử
+    align-items: center;
+    width: 70%; // Tăng chiều rộng một chút để không bị chật
+    margin: 0 auto 15px;
+    border-radius: 12px; // Bo góc mềm mại hơn
+    padding: 10px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); // Shadow nhẹ lúc bình thường
+    border: 1px solid rgba(var(--color-main-rgb), 0.2); // Viền mờ
+    color: var(--color-main);
+    background-color: white;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: default;
+
+    &:hover {
+        transform: translateY(-2px); // Bay nhẹ lên khi hover
+        box-shadow: 0px 8px 20px 0px var(--color-main);
+        background-color: var(--color-main);
+        color: white;
+
+        .track-label { color: white; }
+        .download-btn { color: white; border-color: white; }
+        
+        // Làm mờ nhẹ thẻ audio khi hover row (tùy chọn)
+        audio { filter: invert(0); } 
+    }
+
+    .track-info {
+        width: 81px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .track-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--color-main); // Màu checkbox cùng màu chủ đạo
+        }
+
+        .track-label {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    }
+
+    .audio-player {
+        flex: 2; // Chiếm nhiều không gian nhất ở giữa
+        display: flex;
+        justify-content: center;
+
+        audio {
+            height: 35px;
+            width: 100%;
+            max-width: 300px;
+            outline: none;
+            // Một số trình duyệt cho phép filter màu audio player
+            filter: sepia(20%) saturate(70%) grayscale(1) contrast(90%) brightness(1.2);
+            
+            &:hover {
+                filter: none;
+            }
+        }
+    }
+
+    .download-btn {
+        text-align: right;
+        color: var(--color-main);
+        text-decoration: none;
+        font-weight: bold;
+        padding: 5px 10px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        transition: all 0.2s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+        }
+    }
+}
+
+// Cải thiện giao diện Progress Bar
+.progress {
+    height: 12px !important;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+    
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+        transition: width 0.4s ease;
+    }
+}

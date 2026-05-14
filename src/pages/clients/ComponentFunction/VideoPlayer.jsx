@@ -135,7 +135,7 @@ const VideoPlayer = () => {
   return (
     <div ref={playerContainerRef} style={styles.container(isFullscreen)}>
       {/* Vùng canvas mô phỏng khung hình CapCut */}
-      <div style={styles.canvasWrapper(isFullscreen)}>
+      <div className="video-preview" style={styles.canvasWrapper(isFullscreen)}>
         <div style={styles.videoArea(aspectRatio)}>
           {activeVideo ? (
             <video
@@ -161,7 +161,7 @@ const VideoPlayer = () => {
                 const activeLyric = txt.lyrics.find(l => itemTime >= l.start && itemTime <= l.end);
                 const upcomingLyrics = txt.lyrics.filter(l => l.start > itemTime).slice(0, 2);
                 return (
-                  <div key={txt.id} style={{ textAlign: 'center' }}>
+                  <div key={txt.id + Math.random()} style={{ textAlign: 'center' }}>
                     {activeLyric && (
                       <div style={{ ...styles.textItem, color: 'var(--color-main)', fontSize: 'clamp(20px, 4vw, 32px)' }}>
                         {activeLyric.word}
@@ -178,12 +178,12 @@ const VideoPlayer = () => {
               return (
                 
                 <div 
-                    key={txt.id}
+                    key={txt.id + Math.random()}
                     style={{
                       // ...styles.textItem,
                       // ...txt.style,
                       // Ưu tiên chạy animation
-                      animation: `${txt.textEffect || effectGlobal} 0.3s linear`,
+                      animation: `${txt.textEffect || effectGlobal} 0.1s linear`,
                       
                       // Kiểm tra kỹ giá trị transform
                       transform: (effectGlobal == "random" || txt.textEffect == "random")

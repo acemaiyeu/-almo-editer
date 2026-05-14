@@ -8,9 +8,11 @@ import { RenderEngine, getMaxDuration, downloadVideo } from '../utils/renderEngi
 // ─────────────────────────────────────────────
 
 const QUALITY_OPTIONS = [
-  { label: '4K – 3840×2160', width: 3840, height: 2160, fps: 30, bitrate: 40_000_000 },
-  { label: '1080p – 1920×1080', width: 1920, height: 1080, fps: 30, bitrate: 12_000_000 },
-  { label: '720p – 1280×720', width: 1280, height: 720, fps: 30, bitrate: 6_000_000 },
+  { label: '4K – 3840×2160', width: 3840, height: 2160, fps: 60, bitrate: 40_000_000 },
+  { label: '1080p – 1920×1080', width: 1920, height: 1080, fps: 60, bitrate: 12_000_000 },
+  { label: '1080p – 1080x1920', width: 1080, height: 1920, fps: 60, bitrate: 12_000_000 },
+  { label: '720p – 1280×720', width: 1280, height: 720, fps: 60, bitrate: 6_000_000 },
+  { label: '720p – 720x1280', width: 720, height: 1280, fps: 60, bitrate: 6_000_000 },
   { label: '480p – 854×480', width: 854, height: 480, fps: 24, bitrate: 2_500_000 },
 ];
 
@@ -110,6 +112,7 @@ const RenderModal = ({isOpen,  onClose }) => {
         fps,
         videoBitsPerSecond: selectedQuality.bitrate,
         effectGlobal,
+        previewElement: document.querySelector('.video-preview'),
         onProgress: (pct, sec) => {
           setProgress(pct);
           setCurrentSec(sec);
@@ -126,6 +129,7 @@ const RenderModal = ({isOpen,  onClose }) => {
           setStatus('error');
         },
       });
+      // console.log(engine)
       engineRef.current = engine;
       await engine.start(tracks, maxDuration);
       

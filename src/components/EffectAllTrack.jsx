@@ -18,9 +18,9 @@ const EffectAllTrack = ({ isOpen, onClose }) => {
       <div className={`effect-container`}>
           <div  className='effect-content'>
             <div className="close" onClick={() => onClose(false)}>Đóng</div>
-              {listTextEffect && listTextEffect.length > 0 && listTextEffect.map((effect) => {
+              {listTextEffect && listTextEffect.length > 0 && listTextEffect.map((effect, ind) => {
             return (
-              <div className={`effect-item ${effectGlobal === effect.code ? 'active' : ''}`} title={effect.name} onClick={() => handleChangeEffect(effect.code)}>
+              <div key={ind} className={`effect-item ${effectGlobal === effect.code ? 'active' : ''}`} title={effect.name} onClick={() => handleChangeEffect(effect.code)}>
                 <div className='effect-item-thumbnail'>
                     <img className="effect-item-thumbnail-img" loading='lazy' src={effect.thumbnail}></img>
                 </div>

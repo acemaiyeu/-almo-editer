@@ -20,7 +20,7 @@ const Editor = () => {
 }
 `);
 
-  const [effect, setEffect] = useState('neon2');
+  const [effect, setEffect] = useState('none');
   const [isPlaying, setIsPlaying] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
 
@@ -115,7 +115,7 @@ const changeNameToEnglish = (input) => {
     <div className="editor-container">
       <div className="editor-header">
         {/* CSS */}
-        <div className="editor-panel">
+        {/* <div className="editor-panel">
           <div className="panel-title">CSS</div>
           <textarea
             className="editor-textarea"
@@ -125,7 +125,7 @@ const changeNameToEnglish = (input) => {
               setIsPlaying(false);
             }}
           />
-        </div>
+        </div> */}
 
         {/* Keyframes */}
         <div className="editor-panel">
@@ -144,17 +144,13 @@ const changeNameToEnglish = (input) => {
         <div className="editor-panel">
           <div className="panel-title">Controls</div>
           <div className="controls">
-            <select
+            <input
               value={effect}
               onChange={(e) => {
                 setEffect(e.target.value);
                 setIsPlaying(false);
               }}
-            >
-              <option value="neon2">Neon Effect</option>
-              <option value="zoom-in">Zoom In</option>
-              <option value="none">No Animation</option>
-            </select>
+            />
 
             <button className="btn-run" onClick={handleRun}>
               Run
