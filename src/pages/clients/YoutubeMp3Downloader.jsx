@@ -15,7 +15,7 @@ const YoutubeMp3Downloader = () => {
       setLoading(true);
 
       // chất lượng cao nhất mp3
-      const downloadUrl = `https://v19.www-y2mate.com/search?q=${url}`;
+      const downloadUrl = url.replaceAll("https://www.youtube.com", "https://couvreuryvelines78.fr/");
 
       // mở tab tải
       window.open(downloadUrl, "_blank");

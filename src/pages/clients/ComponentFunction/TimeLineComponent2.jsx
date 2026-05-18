@@ -8,11 +8,12 @@ import SubLyricEditor from '../../../components/SubLyricEditor';
 import LyricsSubMaker from '../../../components/LyricsSubMaker';
 import MakePlaylist from '../../../components/MakePlaylist';
 import EffectAllTrack from '../../../components/EffectAllTrack';
+import '../../../style/TimelineComponent2.scss';
 
 const AlmoEditorFinal = () => {
   const dispatch = useDispatch();
   const { currentTime, tracks, pixelsPerSecond, isPlaying } = useSelector((state) => state.timeline);
-  const { listTextEffect } = useSelector((state) => state.public);
+  const { listTextEffect, nameEffectActive } = useSelector((state) => state.public);
   const PIXELS_PER_SECOND = pixelsPerSecond || 30;
 
   const [draggingPlayhead, setDraggingPlayhead] = useState(false);
@@ -409,9 +410,11 @@ const AlmoEditorFinal = () => {
       tracks: [...currentTracks, ...newQuickSubTracks] 
     }));
   };
-
+  if (nameEffectActive !== "mainscreen"){
+    return <></>
+  }
   return (
-    <div style={{ height: '39vh', background: '#111', display: 'flex', flexDirection: 'column', borderTop: '1px solid #333', overflow: 'auto', borderRadius: '12px' }}>
+    <div className="time-line-container-2">
       
       {/* TOOLBAR */}
       <div style={{ padding: '12px 20px', background: '#1a1a1a', display: 'flex', gap: '20px', alignItems: 'center', position: 'relative', zIndex: 500, borderBottom: '1px solid #222' }}>

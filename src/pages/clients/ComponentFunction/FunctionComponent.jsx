@@ -36,10 +36,14 @@ const FunctionComponent = () => {
     
 
     return (    
-        <div className="function-component-container">
+        <div className="function-component-container" style={{minHeight: `${nameEffectActive === 'mainscreen' ? 'auto' : '100vh'}`}}>
             <div className="function-names">
                 {listNameEffect && listNameEffect.length > 0 ? listNameEffect.map((item, index) => (
-                    <div className={`function-name ${item.code === nameEffectActive ? 'active' : ''}`} key={index} onClick={() => setNameEffectActive(item.code)}>
+                    <div className={`function-name ${item.code === nameEffectActive ? 'active' : ''}`} key={index} onClick={() => {
+                        setNameEffectActive(item.code)
+                        dispatch(updatePublic({nameEffectActive: item.code}))
+                        }
+                    }>
                         {item.name}
                     </div>
                 )) : (

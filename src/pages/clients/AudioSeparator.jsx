@@ -4,6 +4,9 @@ import { DemucsProcessor } from 'demucs-web';
 import { useDispatch } from 'react-redux';
 import '../../style/AudioSeparator.scss';
 import { showDynamic } from '../../app/ComponentSupport/functions';
+import icon_default from '../../assets/img/logo.png'
+import icon_music from '../../assets/img/music.gif'
+import JSZip from 'jszip';
 
 const AudioSeparator = () => {
   const dispatch = useDispatch();
@@ -11,7 +14,6 @@ const AudioSeparator = () => {
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null); // Lưu file đã chọn
   const [isDragging, setIsDragging] = useState(false); // Trạng thái hover kéo file
-
   const [audioUrls, setAudioUrls] = useState({
     vocal: null,
     drums: null,
@@ -21,7 +23,7 @@ const AudioSeparator = () => {
 
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
-  
+  const projectInputRef = useRef(null);  
   const audioRefs = {
     vocal: useRef(null),
     drums: useRef(null),
@@ -124,14 +126,18 @@ const AudioSeparator = () => {
 
   const togglePlaySync = () => {
     const activeRefs = selectedTracks.map(t => audioRefs[t].current).filter(Boolean);
-    
+    let favicon = document.getElementById('web-icon');
     if (isPlayingAll) {
       activeRefs.forEach(audio => audio.pause());
       setIsPlayingAll(false);
+      document.title = `ALMO EDITOR`
+      favicon.href = icon_default
     } else {
       activeRefs.forEach(audio => {
         audio.currentTime = 0;
         audio.play();
+      document.title = `Đang phát ${selectedFile.name}`
+      favicon.href = icon_music
       });
       setIsPlayingAll(true);
     }
@@ -203,6 +209,64 @@ const AudioSeparator = () => {
     }
     setIsProcessing(false);
   };
+  const downloadAllTracks = async () => {
+  const zip = new JSZip();
+
+  for (const [key, url] of Object.entries(audioUrls)) {
+    if (!url) continue;
+
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    zip.file(`${key}.wav`, blob);
+  }
+
+  // thêm metadata
+  zip.file(
+    'project.json',
+    JSON.stringify({
+      fileName: selectedFile?.name || 'unknown',
+      createdAt: Date.now()
+    })
+  );
+
+  const content = await zip.generateAsync({ type: 'blob' });
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(content);
+  link.download = `${selectedFile.name}_ALMO_EDITOR_separated.zip`;
+  link.click();
+};
+
+const loadSeparatedProject = async (file) => {
+  try {
+    const zip = await JSZip.loadAsync(file);
+
+    const urls = {};
+
+    const tracks = ['vocal', 'drums', 'bass', 'other'];
+
+    for (const track of tracks) {
+      const zipFile = zip.file(`${track}.wav`);
+
+      if (zipFile) {
+        const blob = await zipFile.async('blob');
+
+        urls[track] = URL.createObjectURL(blob);
+      }
+    }
+
+    setAudioUrls(urls);
+
+    setSelectedFile({
+      name: file.name.replace('.zip', '')
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert('File project không hợp lệ');
+  }
+};
 
   const renderAudioItem = (type, label) => {
     const url = audioUrls[type];
@@ -238,7 +302,7 @@ const AudioSeparator = () => {
   };
 
   return (
-    <div style={{ padding: 20, fontFamily: 'Arial', maxWidth: '800px', margin: 'auto' }}>
+    <div style={{ padding: 20, fontFamily: 'Arial', maxWidth: '1200px', marginLeft: "auto", marginRight: "auto" }}>
       <h2 style={{ color: "var(--color-main)", textAlign: 'center' }}>TÁCH BEAT VÀ VOCAL</h2>
 
       {/* DROP ZONE AREA */}
@@ -287,7 +351,26 @@ const AudioSeparator = () => {
           </div>
         )}
       </div>
+        <div>
+          <input
+  type="file"
+  hidden
+  ref={projectInputRef}
+  accept=".zip"
+  onChange={(e) => loadSeparatedProject(e.target.files[0])}
+/>
 
+<button
+  onClick={() => projectInputRef.current.click()}
+  style={{
+    marginLeft: 10,
+    marginBottom: 10,
+    padding: '10px 20px'
+  }}
+>
+  📂 Load Track Đã Tách
+</button>
+        </div>
       {/* NÚT TẠO BÀI HÁT MỚI */}
       {selectedFile && !isProcessing && !audioUrls.vocal && (
         <div style={{ textAlign: 'center' }}>
@@ -307,6 +390,7 @@ const AudioSeparator = () => {
             >
                 ✨ BẮT ĐẦU
             </button>
+            
         </div>
       )}
 
@@ -330,6 +414,24 @@ const AudioSeparator = () => {
         {renderAudioItem('drums', 'Drums')}
         {renderAudioItem('bass', 'Bass')}
         {renderAudioItem('other', 'Other')}
+
+        {audioUrls.vocal && (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <button
+            onClick={downloadAllTracks}
+            style={{
+              padding: '12px 30px',
+              background: 'green',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 10,
+              cursor: 'pointer'
+            }}
+          >
+            ⬇ Tải toàn bộ track
+          </button>
+        </div>
+      )}
       </div>
 
       {selectedTracks.length > 0 && (
@@ -343,7 +445,7 @@ const AudioSeparator = () => {
           border: '1px solid #eee'
         }}>
           <h4 style={{ color: "var(--color-main)", marginTop: 0 }}>
-            Chế độ nghe kết hợp ({selectedTracks.length} track)
+            {/* Chế độ nghe kết hợp ({selectedTracks.length} track) */}
           </h4>
           <button 
             onClick={togglePlaySync}

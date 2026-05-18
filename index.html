@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./src/assets/img/logo-icon.ico" />
+    <link id="web-icon" rel="icon" type="image/svg+xml" href="./src/assets/img/logo-icon.ico" />
     <!-- <meta http-equiv="Content-Security-Policy" 
       content="default-src 'self' *; 
                script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net *;
@@ -20,5 +20,36 @@
   <body>
     <div id="root" style="position: relative;"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+    // Nhập tiêu đề bạn muốn hiển thị ở đây
+    
+    // Thêm 5 khoảng trắng đặc biệt (không bị trình duyệt xóa) vào cuối chữ
+    // Mỗi ký tự '\u00a0' tương đương với 1 dấu cách
+    
+
+const padding = "\u00a0\u00a0\u00a0\u00a0\u00a0";
+
+function scrollTitle() {
+    let currentTitle = document.title;
+
+    // Kiểm tra nếu title chưa có đoạn padding ở đuôi
+    if (!currentTitle.includes(padding)) {
+        // 1. CHUYỂN TẤT CẢ KÝ TỰ KHỎANG TRẮNG THƯỜNG TRONG CÂU THÀNH KHỎANG TRẮNG ĐẶC BIỆT
+        currentTitle = currentTitle.replace(/ /g, "\u00a0");
+        
+        // 2. Cộng thêm khoảng trắng ở đuôi
+        currentTitle = currentTitle + padding;
+    }
+
+    // 3. Cắt ký tự đầu tiên đưa xuống cuối như bình thường
+    let updatedTitle = currentTitle.substring(1, currentTitle.length) + currentTitle.substring(0, 1);
+    
+    // 4. Gán lại cho title
+    document.title = updatedTitle;
+}
+
+    // Chạy hiệu ứng mỗi 250ms
+    setInterval(scrollTitle, 500);
+    </script>
   </body>
 </html>

@@ -85,7 +85,8 @@ const publicSlice = createSlice({
         "name": "Tải nhạc từ youtube"
       }
     ],
-    effectGlobal: "neon"
+    effectGlobal: "neon",
+    nameEffectActive: "mainscreen"
   },
   reducers: {
     updatePublic: (state, action) => {
@@ -96,6 +97,7 @@ const publicSlice = createSlice({
         state.listTextEffect?.length ? action.payload.listTextEffect : state.listTextEffect; // Cập nhật listTextEffect nếu có, nếu không giữ nguyên
         state.listScreen = action.payload.listScreen || state.listScreen; // Cập nhật listScreen nếu có, nếu không giữ nguyên 
         state.effectGlobal = action.payload.effectGlobal || state.effectGlobal; // Cập nhật listScreen nếu có, nếu không giữ nguyên 
+        state.nameEffectActive = action.payload.nameEffectActive || state.nameEffectActive
       }
   }
 });
