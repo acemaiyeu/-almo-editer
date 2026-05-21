@@ -14,6 +14,7 @@ const AudioSeparator = () => {
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null); // Lưu file đã chọn
   const [isDragging, setIsDragging] = useState(false); // Trạng thái hover kéo file
+  const [status, setStatus] = useState("")
   const [audioUrls, setAudioUrls] = useState({
     vocal: null,
     drums: null,
@@ -36,12 +37,17 @@ const AudioSeparator = () => {
   // =========================
   // XỬ LÝ FILE (DRAG & DROP)
   // =========================
-  const handleFileChange = (file) => {
+  const handleFileChange = async (file) => {
+    setStatus("Đang kiểm tra...")
     if (file && file.type.startsWith('audio/')) {
+     
+
       setSelectedFile(file);
       // Reset kết quả cũ khi chọn file mới
       setAudioUrls({ vocal: null, drums: null, bass: null, other: null });
       setSelectedTracks([]);
+      processAudio(file)
+      
     } else {
       alert("Vui lòng chọn định dạng âm thanh hợp lệ!");
     }
@@ -146,7 +152,7 @@ const AudioSeparator = () => {
   // =========================
   // PROCESS AI (Kích hoạt khi bấm nút "Tạo bài hát")
   // =========================
-  const processAudio = async () => {
+  const processAudio = async (selectedFile) => {
     if(!selectedFile) return;
 
     // if(window.location.hostname !== "localhost" && window.location.hostname !== "192.168.31.81"){
@@ -182,8 +188,38 @@ const AudioSeparator = () => {
 
       const arrayBuffer = await selectedFile.arrayBuffer();
       const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-      const left = audioBuffer.getChannelData(0);
-      const right = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : left;
+      
+      // =========================================================================
+      // CODE THÊM MỚI: KIỂM TRA VÀ CẮT AUDIO NẾU QUÁ 30 PHÚT (1800 giây)
+      // =========================================================================
+      const MAX_SECONDS = 600; 
+      let targetAudioBuffer = audioBuffer;
+
+      if (audioBuffer.duration > MAX_SECONDS) {
+        showDynamic(dispatch, "Kích thước file đã quá 10 phút!")
+        setStatus("Kích thước file đã quá 10 phút! Vui lòng cắt ngắn hoặc chọn audio khác!")
+        setSelectedFile(null);
+        return;
+        //Phần cut audio
+        // const maxSamples = MAX_SECONDS * audioBuffer.sampleRate;
+        // targetAudioBuffer = audioCtx.createBuffer(
+        //   audioBuffer.numberOfChannels,
+        //   maxSamples,
+        //   audioBuffer.sampleRate
+        // );
+
+        // for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+        //   targetAudioBuffer.copyToChannel(
+        //     audioBuffer.getChannelData(i).slice(0, maxSamples),
+        //     i
+        //   );
+        // }
+      }
+      // =========================================================================
+      setStatus("AI đang phân tách các track, vui lòng đợi...")
+      // Dùng targetAudioBuffer (đã cắt nếu quá 30p) để lấy left và right
+      const left = targetAudioBuffer.getChannelData(0);
+      const right = targetAudioBuffer.numberOfChannels > 1 ? targetAudioBuffer.getChannelData(1) : left;
 
       const result = await processor.separate(left, right);
 
@@ -195,7 +231,7 @@ const AudioSeparator = () => {
           audioCtx,
           result[track].left,
           result[track].right,
-          audioBuffer.sampleRate
+          targetAudioBuffer.sampleRate
         );
         const blob = bufferToWave(buffer);
         const stateKey = track === 'vocals' ? 'vocal' : track;
@@ -203,12 +239,14 @@ const AudioSeparator = () => {
       }
 
       setAudioUrls(urls);
+      setStatus("")
     } catch (err) {
       console.error(err);
-      alert('Lỗi AI separator');
+      showDynamic(dispatch,'Lỗi AI separator');
     }
     setIsProcessing(false);
   };
+
   const downloadAllTracks = async () => {
   const zip = new JSZip();
 
@@ -264,7 +302,7 @@ const loadSeparatedProject = async (file) => {
 
   } catch (err) {
     console.error(err);
-    alert('File project không hợp lệ');
+    showDynamic(dispatch,'File project không hợp lệ');
   }
 };
 
@@ -372,7 +410,7 @@ const loadSeparatedProject = async (file) => {
 </button>
         </div>
       {/* NÚT TẠO BÀI HÁT MỚI */}
-      {selectedFile && !isProcessing && !audioUrls.vocal && (
+      {/* {selectedFile && !isProcessing && !audioUrls.vocal && (
         <div style={{ textAlign: 'center' }}>
             <button 
                 onClick={processAudio}
@@ -392,11 +430,11 @@ const loadSeparatedProject = async (file) => {
             </button>
             
         </div>
-      )}
+      )} */}
 
       {isProcessing && (
         <div style={{ marginTop: 20, textAlign: 'center' }}>
-          <p style={{ color: "var(--color-main)", fontWeight: 'bold' }}>AI đang phân tách các track, vui lòng đợi...</p>
+          <p style={{ color: "var(--color-main)", fontWeight: 'bold' }}>{status}</p>
           <div className="progress" style={{width: "100%", height: '20px', borderRadius: '10px'}}>
             <div 
               className="progress-bar progress-bar-striped progress-bar-animated" 
@@ -433,7 +471,36 @@ const loadSeparatedProject = async (file) => {
         </div>
       )}
       </div>
-
+      <div style={{ 
+          margin: '30px auto', 
+          width: "100%",
+          borderRadius: '15px',
+          backgroundColor: 'transparent',
+          textAlign: 'center',
+        }}>
+          <h4 style={{ color: "var(--color-main)", marginTop: 0 }}>
+            {/* Chế độ nghe kết hợp ({selectedTracks.length} track) */}
+          </h4>
+          <button 
+            onClick={() => {
+              handleCheckTrack("vocal")
+              handleCheckTrack("drums")
+              handleCheckTrack("bass")
+              handleCheckTrack("other")
+            }}
+            style={{
+              fontSize: '16px',
+              fontWeight: 'bold',
+              backgroundColor: 'transparent',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Chọn tất cả
+          </button>
+        </div>
       {selectedTracks.length > 0 && (
         <div style={{ 
           margin: '30px auto', 
@@ -468,4 +535,4 @@ const loadSeparatedProject = async (file) => {
   );
 };
 
-export default AudioSeparator; 
+export default AudioSeparator;

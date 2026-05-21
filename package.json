@@ -27,6 +27,7 @@
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
     "jszip": "^3.10.1",
+    "konva": "^10.3.0",
     "laravel-echo": "^2.3.1",
     "localforage": "^1.10.0",
     "lucide-react": "^0.563.0",
@@ -35,14 +36,17 @@
     "quill": "^2.0.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-icons": "^5.6.0",
+    "react-konva": "^19.2.4",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.13.0",
     "react-toastify": "^11.0.5",
     "recharts": "^3.7.0",
     "remotion": "^3.3.102",
     "sass": "^1.97.3",
-    "wavesurfer.js": "^7.12.6",
-    "xlsx": "^0.18.5"
+    "wavesurfer.js": "^7.12.7",
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

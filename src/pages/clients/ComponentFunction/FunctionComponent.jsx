@@ -12,6 +12,8 @@ import Editor from "./Editor";
 import { updatePublic } from "../../../app/features/publicSlice";
 import AudioSeparator from "../AudioSeparator";
 import YoutubeMp3Downloader from "../YoutubeMp3Downloader";
+import RecodingVideo from "../RecodingVideo";
+import VoiceVideoEditor from "../VoiceVideoEditor";
 
 const FunctionComponent = () => {
     const dispatch = useDispatch();
@@ -73,6 +75,9 @@ const FunctionComponent = () => {
                 {nameEffectActive === 'editor' && <Editor />}
                 {nameEffectActive === 'separate' && <AudioSeparator/>}
                 {nameEffectActive === 'download_audio' && <YoutubeMp3Downloader />}
+                {nameEffectActive === 'recoding_video' && <VoiceVideoEditor  />}
+                
+
                 
                 
                 

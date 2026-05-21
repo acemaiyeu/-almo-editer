@@ -83,6 +83,10 @@ const publicSlice = createSlice({
       {
         "code": "download_audio",
         "name": "Tải nhạc từ youtube"
+      },
+      {
+        "code": "recoding_video",
+        "name": "Thu âm video"
       }
     ],
     effectGlobal: "neon",
