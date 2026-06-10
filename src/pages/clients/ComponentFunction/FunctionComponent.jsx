@@ -14,6 +14,7 @@ import AudioSeparator from "../AudioSeparator";
 import YoutubeMp3Downloader from "../YoutubeMp3Downloader";
 import RecodingVideo from "../RecodingVideo";
 import VoiceVideoEditor from "../VoiceVideoEditor";
+import IphoneKaraoke from "../IphoneKaraoke";
 
 const FunctionComponent = () => {
     const dispatch = useDispatch();
@@ -76,6 +77,8 @@ const FunctionComponent = () => {
                 {nameEffectActive === 'separate' && <AudioSeparator/>}
                 {nameEffectActive === 'download_audio' && <YoutubeMp3Downloader />}
                 {nameEffectActive === 'recoding_video' && <VoiceVideoEditor  />}
+                {nameEffectActive === 'karaoke' && <IphoneKaraoke  />}
+                
                 
 
                 

@@ -81,6 +81,10 @@ const publicSlice = createSlice({
         "name": "Tách nhạc và giọng"
       },
       {
+        "code": "karaoke",
+        "name": "Karaoke"
+      },
+      {
         "code": "download_audio",
         "name": "Tải nhạc từ youtube"
       },

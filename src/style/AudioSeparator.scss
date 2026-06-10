@@ -55,8 +55,9 @@
         audio {
             height: 35px;
             width: 100%;
-            max-width: 300px;
+            max-width: 600px;
             outline: none;
+            min-width: 434px;
             // Một số trình duyệt cho phép filter màu audio player
             filter: sepia(20%) saturate(70%) grayscale(1) contrast(90%) brightness(1.2);
             

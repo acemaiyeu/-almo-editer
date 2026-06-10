@@ -1,0 +1,563 @@
+// Khởi tạo các biến hệ thống màu iOS sang trọng
+$bg-desktop: #121214;
+$bg-iphone: #28d606;
+$border-iphone-case: #2d2d30;
+$accent-gold: #f59e0b;
+$accent-blue: #f00930;
+$accent-green: #10b981;
+$text-muted: #6b7280;
+
+// Container bọc toàn bộ môi trường ngoài máy tính
+.iphone-layout-container {
+  height: 100vh;
+  background-color: $bg-desktop;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+}
+
+// KHUNG ĐIỆN THOẠI IPHONE CỐ ĐỊNH TỶ LỆ ĐỨNG (9:16)
+.iphone-chassis {
+  position: relative;
+  width: auto;
+  height: 94vh; 
+  aspect-ratio: 9 / 16; 
+  background-color: $bg-iphone;
+  border-radius: 44px;
+  border: 12px solid $border-iphone-case; // <-- ĐỔI THÀNH BIẾN NÀY KHỚP VỚI ĐẦU FILE
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8),
+              0 0 0 2px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// Màn hình hiển thị bên trong điện thoại
+.iphone-screen {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: $bg-iphone;
+  position: relative;
+  z-index: inherit;
+}
+
+// Hệ thống thanh hiển thị thông số ở đỉnh đầu (Không Dynamic Island)
+.top-system-bar {
+  width: 100%;
+  padding: 14px 20px 6px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #888888;
+  letter-spacing: 0.5px;
+  background-color: rgba(0, 0, 0, 0.4);
+
+  .live-tag {
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .timer-badge {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #1a1a1c;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: #ffffff;
+    border: 1px solid #2a2a2c;
+  }
+}
+
+// Cụm nút chuyển đổi Tab
+.tab-control-group {
+  padding: 6px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background-color: rgba(0, 0, 0, 0.2);
+
+  .tab-btn {
+    padding: 8px 0;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 10px;
+    border: none;
+    background-color: #21f306;
+    color: #999999;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.5px;
+
+    &.active {
+      background-color: #ffffff;
+      color: #000000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+// Phần body chứa nội dung tương tác (Karaoke / Studio)
+.phone-dynamic-body {
+  flex: 1;
+  width: 100%;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+/* ================= TAB 1: GIAO DIỆN KARAOKE CHUẨN SƠ ĐỒ ================= */
+.karaoke-tab-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+// Vùng trung tâm hiển thị chữ "ANH YÊU" cố định và nhận chữ bay đến
+.display-lyrics-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+
+  .static-title {
+    color: $accent-gold;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  }
+
+  // Điểm đích đến của chữ bay (Khớp y hệt sơ đồ phác thảo của bạn)
+  .fly-target-zone {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    min-height: 54px;
+    width: 99%;
+    top: 30%;
+    border: 1px dashed #222224;
+    border-radius: 14px;
+    padding: 10px;
+    align-items: center;
+    background-color: rgba(10, 10, 12, 0.5);
+    position: absolute;
+
+    .placeholder-text {
+      color: #3f3f46;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    .active-word-item {
+      color: #ffffff;
+      font-size: 21px;
+      font-weight: 800;
+      text-transform: uppercase;
+      animation: wordPopIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+  }
+}
+
+// Bàn phím gợi ý nằm sát đáy màn hình
+.keyboard-suggest-box {
+  width: 100%;
+  background-color: #bdbdbd;
+  border: 1px solid #949494;
+  padding: 12px;
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  .keyboard-header-title {
+    font-size: 9px;
+    color: #ee0a43;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+
+  .keyboard-layout-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+
+    .key-btn {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+
+      &.has-word {
+        background-color: #ffffff;
+        color: #000000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+
+      &.empty-word {
+        background-color: #040405;
+        border: 1px dashed #1f1f23;
+        color: transparent;
+      }
+    }
+  }
+}
+
+/* ================= TAB 2: STUDIO KHÔNG ĐỔI LỚP LAYOUT ================= */
+.studio-tab-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  height: 100%;
+
+  .step-block {
+    display: flex;
+    // flex-direction: column;
+    gap: 4px;
+  }
+
+  .step-block-flexible {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  .step-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: #888888;
+    letter-spacing: 0.5px;
+  }
+
+  .studio-textarea {
+    width: 100%;
+    height: 55px;
+    background-color: #0c0c0e;
+    border: 1px solid #1c1c1f;
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 11px;
+    color: #ffffff;
+    outline: none;
+    resize: none;
+
+    &:focus {
+      border-color: #3b82f6;
+    }
+  }
+
+  .action-btn-accent {
+    width: 100%;
+    padding: 8px 0;
+    background-color: $accent-gold;
+    border: none;
+    color: #000000;
+    font-weight: 800;
+    font-size: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .words-timeline-grid {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    background-color: #050506;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid #121214;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    max-height: 140px;
+
+    .word-badge {
+      padding: 4px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 700;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: #0c0c0e;
+      color: #444446;
+      border: 1px solid #141416;
+
+      .tm {
+        font-size: 8px;
+        font-family: monospace;
+        margin-top: 1px;
+      }
+
+      &.recording {
+        background-color: #dc2626;
+        color: #ffffff;
+        border-color: #ef4444;
+        animation: pulseAlpha 1s infinite;
+      }
+
+      &.stamped {
+        background-color: #111827;
+        color: #10b981;
+        border-color: #065f46;
+      }
+    }
+  }
+
+  .submit-studio-btn {
+    width: 100%;
+    padding: 10px 0;
+    background-color: $accent-green;
+    border: none;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 11px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+}
+
+/* ================= TRÌNH ĐIỀU KHIỂN MP3 (ĐÁY CHUNG) ================= */
+.bottom-audio-controller {
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-t: 1px solid #121214;
+
+  .file-uploader-wrapper {
+    position: relative;
+    width: 100%;
+    height: 32px;
+    background-color: #0c0c0e;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #27272a;
+    margin-bottom: 6px;
+
+    input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    span {
+      font-size: 9px;
+      color: #888888;
+    }
+  }
+
+  .audio-name-display {
+    font-size: 9px;
+    color: #4b5563;
+    text-align: center;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+  }
+
+  .master-play-btn {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 11px;
+    text-transform: uppercase;
+    background-color: $accent-blue;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.playing {
+      background-color: #dc2626;
+    }
+
+    &.disabled {
+      background-color: #1c1c1f;
+      color: #4b5563;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* ================= HIỆU ỨNG CHỮ PHÓNG TỪ PHÍM LÊN ĐÍCH ================= */
+.flying-ghost-word {
+  position: fixed;
+  z-index: 99999;
+  font-weight: 900;
+  color: #ffffff;
+  font-size: 12px;
+  pointer-events: none;
+  text-transform: uppercase;
+  transition: transform 0.52s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.48s ease-out;
+  transform-origin: center center;
+}
+.layout-root-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #0f172a;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+
+  .global-tab-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+
+    .global-tab-btn {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 30px;
+      border: 2px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: #3b82f6;
+        color: #fff;
+      }
+      &.active {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #fff;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+      }
+    }
+  }
+
+  .global-content-body {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Giao diện ngoài iPhone của Studio */
+  .studio-fullscreen-view {
+    width: 100%;
+    max-width: 1400px;
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    .studio-header-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #334155;
+      padding-bottom: 15px;
+      h2 { margin: 0; font-size: 20px; color: #f8fafc; }
+    }
+
+    .studio-workspace-layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 25px;
+      align-items: start;
+    }
+  }
+
+  .words-timeline-grid.expanded {
+    max-height: 550px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #0f172a;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+  }
+}
+
+.iphone-wrapper-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+@keyframes wordPopIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseAlpha {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+
+.workspace-left-panel{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: red;
+    .speed-control-wrapper , .step-block, .studio-audio-player-box{
+        width: inherit;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 0px;
+        gap: 5px;
+        .audio-control-active{
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+    }
+}

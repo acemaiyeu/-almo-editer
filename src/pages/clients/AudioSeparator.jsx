@@ -1,12 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import * as ort from 'onnxruntime-web';
 import { DemucsProcessor } from 'demucs-web';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import '../../style/AudioSeparator.scss';
 import { showDynamic } from '../../app/ComponentSupport/functions';
 import icon_default from '../../assets/img/logo.png'
 import icon_music from '../../assets/img/music.gif'
 import JSZip from 'jszip';
+import { updateDynamic } from '../../app/features/dynamicIslandSlice';
 
 const AudioSeparator = () => {
   const dispatch = useDispatch();
@@ -21,6 +22,7 @@ const AudioSeparator = () => {
     bass: null,
     other: null,
   });
+  const {content} = useSelector(state => state.dynamic)
 
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
@@ -72,6 +74,7 @@ const AudioSeparator = () => {
   // =========================
   // AUDIO BUFFER -> WAV
   // =========================
+
   const bufferToWave = (audioBuffer) => {
     const numOfChan = audioBuffer.numberOfChannels;
     const length = audioBuffer.length * numOfChan * 2 + 44;
@@ -138,11 +141,13 @@ const AudioSeparator = () => {
       setIsPlayingAll(false);
       document.title = `ALMO EDITOR`
       favicon.href = icon_default
+      showDynamic(dispatch, `ALMO - EDITOR`, 100)
     } else {
       activeRefs.forEach(audio => {
         audio.currentTime = 0;
         audio.play();
       document.title = `Đang phát ${selectedFile.name}`
+      showDynamic(dispatch, `${selectedFile.name.replaceAll(".mp3_ALMO_EDITOR_separated","")}`, (audio.duration * 1000) - (audio.currentTime * 1000))
       favicon.href = icon_music
       });
       setIsPlayingAll(true);
@@ -180,6 +185,12 @@ const AudioSeparator = () => {
           } else {
             let d = p?.progress.toFixed(2) === 1 ? 100 : p?.progress.toFixed(2) * 100;
             setProgress(Math.round(d));
+            document.title = "Đang xử lý " + Math.round(d) + "%"
+            showDynamic(dispatch, "", undefined,  "Đang xử lý: " + Math.round(d) + "%")
+            if(d >= 99.9){
+              document.title = "ALMO - EDITOR"
+              showDynamic(dispatch, "", undefined,  "")
+            }
           }
         }
       });
@@ -196,10 +207,10 @@ const AudioSeparator = () => {
       let targetAudioBuffer = audioBuffer;
 
       if (audioBuffer.duration > MAX_SECONDS) {
-        showDynamic(dispatch, "Kích thước file đã quá 10 phút!")
+        // showDynamic(dispatch, "Kích thước file đã quá 10 phút!")
         setStatus("Kích thước file đã quá 10 phút! Vui lòng cắt ngắn hoặc chọn audio khác!")
-        setSelectedFile(null);
-        return;
+        // setSelectedFile(null);
+        // return;
         //Phần cut audio
         // const maxSamples = MAX_SECONDS * audioBuffer.sampleRate;
         // targetAudioBuffer = audioCtx.createBuffer(
@@ -222,7 +233,6 @@ const AudioSeparator = () => {
       const right = targetAudioBuffer.numberOfChannels > 1 ? targetAudioBuffer.getChannelData(1) : left;
 
       const result = await processor.separate(left, right);
-
       const tracks = ['vocals', 'drums', 'bass', 'other'];
       const urls = {};
 
@@ -249,16 +259,20 @@ const AudioSeparator = () => {
 
   const downloadAllTracks = async () => {
   const zip = new JSZip();
+  showDynamic(dispatch, undefined, 1, "Đang kiểm tra file")
+  try{
+    for (const [key, url] of Object.entries(audioUrls)) {
+      if (!url) continue;
+      showDynamic(dispatch, undefined, 1, "Đang xử lý " + key)
+      const response = await fetch(url);
+      const blob = await response.blob();
 
-  for (const [key, url] of Object.entries(audioUrls)) {
-    if (!url) continue;
-
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    zip.file(`${key}.wav`, blob);
+      zip.file(`${key}.wav`, blob);
+    }
+  }catch (err) {
+    console.log("Lỗi xuất file",err)
   }
-
+  showDynamic(dispatch, undefined, 1, "Đang xuất file")
   // thêm metadata
   zip.file(
     'project.json',
@@ -274,6 +288,7 @@ const AudioSeparator = () => {
   link.href = URL.createObjectURL(content);
   link.download = `${selectedFile.name}_ALMO_EDITOR_separated.zip`;
   link.click();
+  showDynamic(dispatch, undefined, 1, "")
 };
 
 const loadSeparatedProject = async (file) => {
@@ -338,7 +353,10 @@ const loadSeparatedProject = async (file) => {
       </div>
     );
   };
-
+//  useState(() => {
+//     document.title = "Đang xử lý " + progress +"%"
+//     console.log("progress", progress)
+//  }, [progress])
   return (
     <div style={{ padding: 20, fontFamily: 'Arial', maxWidth: '1200px', marginLeft: "auto", marginRight: "auto" }}>
       <h2 style={{ color: "var(--color-main)", textAlign: 'center' }}>TÁCH BEAT VÀ VOCAL</h2>
@@ -378,7 +396,7 @@ const loadSeparatedProject = async (file) => {
             <div style={{ fontSize: '40px', marginBottom: '10px' }}>🎵</div>
             <p style={{ fontWeight: 'bold', color: 'var(--color-main)' }}>{selectedFile.name}</p>
             <p style={{ fontSize: '12px', color: '#666' }}>
-              Size: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+              {(selectedFile.size / (1024 * 1024)).toFixed(2) != "NaN" && <p>Size: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>}
             </p>
             <button 
               onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
@@ -471,7 +489,8 @@ const loadSeparatedProject = async (file) => {
         </div>
       )}
       </div>
-      <div style={{ 
+      {audioUrls["vocal"] && (
+        <div style={{ 
           margin: '30px auto', 
           width: "100%",
           borderRadius: '15px',
@@ -498,9 +517,10 @@ const loadSeparatedProject = async (file) => {
               cursor: 'pointer'
             }}
           >
-            Chọn tất cả
+            {selectedTracks.length > 0 ? "Bỏ " : "Chọn "} tất cả
           </button>
         </div>
+      )}
       {selectedTracks.length > 0 && (
         <div style={{ 
           margin: '30px auto', 

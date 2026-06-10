@@ -3,8 +3,8 @@ import { toast } from "react-toastify";
 import axiosAdmin from "../../services/axiosAdmin";
 import { updateDynamic } from "../features/dynamicIslandSlice"
 
-export const showDynamic = (dispatch, content) => {
-    dispatch(updateDynamic({ title: "", content }));
+export const showDynamic = (dispatch, content, time_show = 5000, title = "") => {
+    dispatch(updateDynamic({ title, content, time_show}));
 };
 export const uploadImage = async (dispatch, event) => {
     const file = event.target.files[0];

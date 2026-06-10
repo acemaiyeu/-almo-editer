@@ -32,16 +32,23 @@ const padding = "\u00a0\u00a0\u00a0\u00a0\u00a0";
 function scrollTitle() {
     let currentTitle = document.title;
 
+    // BƯỚC LỌC: Nếu title (sau khi loại bỏ padding cũ) chưa đủ 20 ký tự thì THOÁT, không chạy animation
+    // Cần replace đuôi padding đi để kiểm tra chính xác độ dài gốc của title
+    let originalTitle = currentTitle.replace(new RegExp(padding + "$"), ""); 
+    if (originalTitle.length < 30) {
+        return; // Dừng hàm tại đây, không làm gì cả
+    }
+
     // Kiểm tra nếu title chưa có đoạn padding ở đuôi
     if (!currentTitle.includes(padding)) {
-        // 1. CHUYỂN TẤT CẢ KÝ TỰ KHỎANG TRẮNG THƯỜNG TRONG CÂU THÀNH KHỎANG TRẮNG ĐẶC BIỆT
+        // 1. CHUYỂN TẤT CẢ KÝ TỰ KHỎANG TRẮNG THƯỜNG THÀNH KHỎANG TRẮNG ĐẶC BIỆT
         currentTitle = currentTitle.replace(/ /g, "\u00a0");
         
         // 2. Cộng thêm khoảng trắng ở đuôi
         currentTitle = currentTitle + padding;
     }
 
-    // 3. Cắt ký tự đầu tiên đưa xuống cuối như bình thường
+    // 3. Cắt ký tự đầu tiên đưa xuống cuối
     let updatedTitle = currentTitle.substring(1, currentTitle.length) + currentTitle.substring(0, 1);
     
     // 4. Gán lại cho title
