@@ -70,16 +70,21 @@ useEffect(() => {
         // Nếu không thỏa mãn điều kiện thì giữ nguyên giá trị, không trừ nữa
         return prevShowTime; 
       });
+
+      
     }, 1000);
   }
-
+  
   // Hàm cleanup: Tự động dọn dẹp interval cũ khi component bị hủy,
   // hoặc khi isActive / time_show thay đổi để tránh sinh ra nhiều interval chạy ngầm
+  
   return () => {
     if (id) clearInterval(id);
   };
 }, [isActive, time_show]); // Lắng nghe sự thay đổi của hai biến này
-
+useEffect(() => {
+      document.title = formatMsToMinutesAndSeconds(showTime)
+  },[showTime]) 
   return (
 
     <div className="di-wrapper">
@@ -95,7 +100,7 @@ useEffect(() => {
             <div className="di-text-stack">
               {/* {notifi && <small className="di-title">{notifi}</small>} */}
               <p className="di-text" style={{
-                animation: content.length > 20 ? 'marquee-move 10s linear infinite' : '',
+                animation: content && content.length > 20 ? 'marquee-move 10s linear infinite' : '',
                  paddingLeft: "100%"
               }}>Đang phát: <span style={{color: "var(--color-main)"}}>{content}</span></p>
             </div>

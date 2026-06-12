@@ -16,6 +16,7 @@ const AudioSeparator = () => {
   const [selectedFile, setSelectedFile] = useState(null); // Lưu file đã chọn
   const [isDragging, setIsDragging] = useState(false); // Trạng thái hover kéo file
   const [status, setStatus] = useState("")
+  const [isLoop, setIsLoop] = useState(false);
   const [audioUrls, setAudioUrls] = useState({
     vocal: null,
     drums: null,
@@ -146,7 +147,7 @@ const AudioSeparator = () => {
       activeRefs.forEach(audio => {
         audio.currentTime = 0;
         audio.play();
-      document.title = `Đang phát ${selectedFile.name}`
+      // document.title = `Đang phát ${selectedFile.name}`
       showDynamic(dispatch, `${selectedFile.name.replaceAll(".mp3_ALMO_EDITOR_separated","")}`, (audio.duration * 1000) - (audio.currentTime * 1000))
       favicon.href = icon_music
       });
@@ -203,28 +204,30 @@ const AudioSeparator = () => {
       // =========================================================================
       // CODE THÊM MỚI: KIỂM TRA VÀ CẮT AUDIO NẾU QUÁ 30 PHÚT (1800 giây)
       // =========================================================================
-      const MAX_SECONDS = 600; 
+      const MAX_SECONDS = 2400; 
       let targetAudioBuffer = audioBuffer;
-
+      console.log(audioBuffer.duration > MAX_SECONDS)
       if (audioBuffer.duration > MAX_SECONDS) {
         // showDynamic(dispatch, "Kích thước file đã quá 10 phút!")
-        setStatus("Kích thước file đã quá 10 phút! Vui lòng cắt ngắn hoặc chọn audio khác!")
+        setStatus("Kích thước file quá lớn! Tiến hành cắt xuống 40!")
         // setSelectedFile(null);
         // return;
         //Phần cut audio
-        // const maxSamples = MAX_SECONDS * audioBuffer.sampleRate;
-        // targetAudioBuffer = audioCtx.createBuffer(
-        //   audioBuffer.numberOfChannels,
-        //   maxSamples,
-        //   audioBuffer.sampleRate
-        // );
-
-        // for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-        //   targetAudioBuffer.copyToChannel(
-        //     audioBuffer.getChannelData(i).slice(0, maxSamples),
-        //     i
-        //   );
-        // }
+        const maxSamples = MAX_SECONDS * audioBuffer.sampleRate;
+        targetAudioBuffer = audioCtx.createBuffer(
+          audioBuffer.numberOfChannels,
+          maxSamples,
+          audioBuffer.sampleRate
+        );
+        showDynamic(dispatch, "", undefined,  "Đang cắt bớt âm thanh")
+        console.log("audioBuffer.numberOfChannels",audioBuffer.numberOfChannels)
+        for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+          targetAudioBuffer.copyToChannel(
+            audioBuffer.getChannelData(i).slice(0, maxSamples),
+            i
+          );
+        }
+        showDynamic(dispatch, "", undefined,  "Đã cắt xong âm thanh: ")
       }
       // =========================================================================
       setStatus("AI đang phân tách các track, vui lòng đợi...")
@@ -343,7 +346,9 @@ const loadSeparatedProject = async (file) => {
             ref={audioRefs[type]}
             src={url}
             controls
-            onEnded={() => setIsPlayingAll(false)}
+            onEnded={() => {if(isLoop){
+              togglePlaySync()
+        }else{ setIsPlayingAll(false)}}}
           />
         </div>
         
@@ -549,6 +554,7 @@ const loadSeparatedProject = async (file) => {
           >
             {isPlayingAll ? '⏸ DỪNG TẤT CẢ' : '▶ PHÁT ĐỒNG BỘ'}
           </button>
+          <input type='checkbox' checked={isLoop} onClick={() => setIsLoop(!isLoop)}/>Lặp lại
         </div>
       )}
     </div>

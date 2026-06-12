@@ -19,7 +19,7 @@ const dynamicIslandSlice = createSlice({
     resetDynamic: (state) => {
       state.notifi = '';
       state.content = '';
-      state.time_show = 0
+      state.time_show = 5000
     }
   }
 });
