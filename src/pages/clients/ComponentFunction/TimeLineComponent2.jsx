@@ -8,8 +8,7 @@ import SubLyricEditor from '../../../components/SubLyricEditor';
 import LyricsSubMaker from '../../../components/LyricsSubMaker';
 import MakePlaylist from '../../../components/MakePlaylist';
 import EffectAllTrack from '../../../components/EffectAllTrack';
-import '../../../style/TimelineComponent2.scss';
-
+import '@style/TimeLineComponent2.scss'
 const AlmoEditorFinal = () => {
   const dispatch = useDispatch();
   const { currentTime, tracks, pixelsPerSecond, isPlaying } = useSelector((state) => state.timeline);

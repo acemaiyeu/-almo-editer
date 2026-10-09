@@ -47,9 +47,17 @@
 
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // Bỏ qua lỗi đỏ nếu dùng Node.js path module bằng cách xài path.resolve
+      '@': path.resolve(__dirname, './src'),
+      '@style': path.resolve(__dirname, './src/style'), // Hoặc trỏ thẳng vào thư mục style
+    },
+  },
   optimizeDeps: {
     exclude: [
       '@ffmpeg/ffmpeg',
