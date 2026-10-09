@@ -1,0 +1,45 @@
+{
+  "E:\\Data\\Code\\almo_review_fe - (2)\\serverless.yml": {
+    "versionFramework": "4.40.0",
+    "servicePath": "E:\\Data\\Code\\almo_review_fe - (2)\\serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "my-tts-service",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "ap-southeast-1"
+      },
+      "functions": {
+        "tts": {
+          "handler": "handler.tts",
+          "events": [
+            {
+              "http": {
+                "path": "api/tts",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ]
+        }
+      },
+      "plugins": [
+        "serverless-offline"
+      ]
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "ap-southeast-1"
+    },
+    "serviceRawFile": "service: my-tts-service\r\n\r\nprovider:\r\n  name: aws\r\n  runtime: nodejs18.x\r\n  region: ap-southeast-1\r\n\r\nfunctions:\r\n  tts:\r\n    handler: handler.tts\r\n    events:\r\n      - http:\r\n          path: api/tts\r\n          method: post\r\n          cors: true\r\n\r\nplugins:\r\n  - serverless-offline",
+    "command": [],
+    "options": {},
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

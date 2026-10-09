@@ -15,6 +15,10 @@ import YoutubeMp3Downloader from "../YoutubeMp3Downloader";
 import RecodingVideo from "../RecodingVideo";
 import VoiceVideoEditor from "../VoiceVideoEditor";
 import IphoneKaraoke from "../IphoneKaraoke";
+import Mp4KaraokePlayer from "../Mp4KaraokePlayer";
+import TextToSpeechLocal from "./TextToSpeechLocal";
+import Mp4ToMp3Converter from "../Mp4ToMp3Converter";
+import { updateDynamic } from "../../../app/features/dynamicIslandSlice";
 
 const FunctionComponent = () => {
     const dispatch = useDispatch();
@@ -23,7 +27,7 @@ const FunctionComponent = () => {
     const handleClick = (text) => {
         dispatch(updateTextEffect({ textEffect: text }));
     }
-    const [nameEffectActive, setNameEffectActive] = useState('mainscreen'); // Mặc định active là 'textEffect'
+    const [nameEffectActive, setNameEffectActive] = useState('separate'); // Mặc định active là 'textEffect'
     const list_effect_custom = localStorage.getItem("list_effect_custom");
     useEffect(() => {
          if(list_effect_custom){
@@ -78,6 +82,10 @@ const FunctionComponent = () => {
                 {nameEffectActive === 'download_audio' && <YoutubeMp3Downloader />}
                 {nameEffectActive === 'recoding_video' && <VoiceVideoEditor  />}
                 {nameEffectActive === 'karaoke' && <IphoneKaraoke  />}
+                {nameEffectActive === 'karaoke-mp4' && <Mp4KaraokePlayer  />}
+                {nameEffectActive === 'text-to-speech' && <TextToSpeechLocal  />}
+                
+                {nameEffectActive === 'mp4tomp3' && <Mp4ToMp3Converter />}
                 
                 
 

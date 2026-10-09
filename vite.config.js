@@ -51,9 +51,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util', 'onnxruntime-web']
+    exclude: [
+      '@ffmpeg/ffmpeg',
+      '@ffmpeg/util',
+      'onnxruntime-web',
+      // KHÔNG thêm gì liên quan lame ở đây
+    ]
   },
-  assetsInclude: ['**/*.onnx', '**/*.wasm'], 
+  assetsInclude: ['**/*.onnx', '**/*.wasm'],
   server: {
     host: true,
     port: 5173,
@@ -63,13 +68,11 @@ export default defineConfig({
     },
   },
   build: {
-    assetsInlineLimit: 0, 
+    assetsInlineLimit: 0,
     sourcemap: true,
-    minify: false,
-    esbuild: 'terser',
+    minify: 'terser',
     terserOptions: {
       compress: {
-        // drop_console: false, // SỬA THÀNH FALSE để xem lỗi AI separator là gì
         drop_debugger: false,
       },
     },

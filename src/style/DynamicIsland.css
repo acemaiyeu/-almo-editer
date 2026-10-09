@@ -1,6 +1,6 @@
 .di-wrapper {
   position: fixed;
-  top: 80px;
+  top: 15px;
   left: 53.25%;
   transform: translateX(-50%); /* Căn giữa màn hình */
   z-index: 10000;

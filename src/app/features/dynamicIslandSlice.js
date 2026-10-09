@@ -6,7 +6,8 @@ const dynamicIslandSlice = createSlice({
     title: '',
     content: '',
     time_show: 5000,
-    notifi: ''
+    notifi: '',
+    route: ''
   },
   reducers: {
     // Tên hàm chuẩn là updateDynamic
@@ -14,12 +15,14 @@ const dynamicIslandSlice = createSlice({
       // state.notifi = action.payload.title;
       state.content = action.payload.content;
       state.time_show = action.payload.time_show,
-      state.title = action.payload.title??state.title
+      state.title = action.payload.title??state.title,
+      state.route = action.payload.title??state.route
     },
     resetDynamic: (state) => {
       state.notifi = '';
       state.content = '';
-      state.time_show = 5000
+      state.time_show = 5000,
+      state.route = ""
     }
   }
 });

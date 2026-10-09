@@ -74,20 +74,33 @@ const publicSlice = createSlice({
         "name": "Cắt video"
       },
       {
-        "code": "editor",
-        "name": "Thêm hiệu ứng chữ"
-      },{
+        "code": "mp4tomp3",
+        "name": "Chuyển đổi mp4 sang mp3"
+      },
+      // {
+      //   "code": "editor",
+      //   "name": "Thêm hiệu ứng chữ"
+      // },
+      {
         "code": "separate",
         "name": "Tách nhạc và giọng"
       },
-      {
-        "code": "karaoke",
-        "name": "Karaoke"
-      },
-      {
-        "code": "download_audio",
-        "name": "Tải nhạc từ youtube"
-      },
+      // {
+      //   "code": "karaoke-mp4",
+      //   "name": "Karaoke Mp4"
+      // },
+        // {
+        //   'code': 'text-to-speech',
+        //   "name": 'text-to-speech'
+        // },
+        // {
+        //   "code": "karaoke",
+        //   "name": "Karaoke"
+        // },
+        // {
+        //   "code": "download_audio",
+        //   "name": "Tải nhạc từ youtube"
+        // },
       {
         "code": "recoding_video",
         "name": "Thu âm video"

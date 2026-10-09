@@ -1,352 +1,437 @@
-import { useRef, useState } from "react";
-import {
-  FaMicrophone,
-  FaPause,
-  FaPlay,
-  FaTrash,
-  FaVolumeMute,
-  FaVideo,
-} from "react-icons/fa";
+// src/pages/clients/VoiceVideoEditor.jsx
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import './voicevideoeditor.css'
+import Background from './components/Background'
+import VideoStage from './components/VideoStage'
+import Timeline from './components/Timeline'
+import DubPanel from './components/DubPanel'
+import ExportPanel from './components/ExportPanel'
+import { decodeFileToAudioBuffer, decodeBlobToAudioBuffer, renderMix } from './lib/audio'
+import { planSegments, fixedSegments } from './lib/segmenter'
+import { uid, fmt } from './lib/utils'
 
-const voices = [
-  { id: "male", name: "Nam Trầm" },
-  { id: "female", name: "Nữ Cao" },
-  { id: "kid", name: "Trẻ Em" },
-  { id: "old", name: "Ông Già" },
-];
+export default function VoiceVideoEditor() {
+  const [videoUrl, setVideoUrl] = useState(null)
+  const [videoFile, setVideoFile] = useState(null)
+  const [duration, setDuration] = useState(0)
+  const [segments, setSegments] = useState([])
+  const [selectedId, setSelectedId] = useState(null)
+  const [originalBuffer, setOriginalBuffer] = useState(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [skipUndubbed, setSkipUndubbed] = useState(false)
+  const [toast, setToast] = useState(null)
 
-const VoiceVideoEditor = () => {
-  console.log("render");
+  const videoRef = useRef(null)
+  const bufferCache = useRef(new Map())          // takeId -> AudioBuffer (dùng khi export)
+  const segmentPlayRef = useRef(null)            // { start, end } giới hạn phát
 
-  const videoRef = useRef(null);
+  const notify = useCallback((msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2600)
+  }, [])
 
-  const [videoUrl, setVideoUrl] = useState(null);
+  /* ================================================================
+     1. Nạp video + phân tích
+     ================================================================ */
+  const handleFile = useCallback(async (file) => {
+    if (!file) return
+    if (videoUrl) URL.revokeObjectURL(videoUrl)
+    setVideoUrl(URL.createObjectURL(file))
+    setVideoFile(file)
+    setSegments([])
+    setSelectedId(null)
+    setOriginalBuffer(null)
+    bufferCache.current.clear()
+    segmentPlayRef.current = null
+  }, [videoUrl])
 
-  const [tracks, setTracks] = useState([]);
+  const handleLoadedMetadata = useCallback(async () => {
+    const v = videoRef.current
+    if (!v) return
+    setDuration(v.duration || 0)
+    if (!videoFile) return
 
-  const [recording, setRecording] = useState(false);
-
-  const [selectedVoice, setSelectedVoice] =
-    useState("male");
-
-  const mediaRecorderRef = useRef(null);
-
-  const chunksRef = useRef([]);
-
-  // =========================
-  // IMPORT VIDEO
-  // =========================
-
-  const importVideo = (e) => {
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    const url = URL.createObjectURL(file);
-
-    setVideoUrl(url);
-  };
-
-  // =========================
-  // PLAY
-  // =========================
-
-  const playAll = async () => {
+    setAnalyzing(true)
     try {
-      if (videoRef.current) {
-        await videoRef.current.play();
-      }
+      const buf = await decodeFileToAudioBuffer(videoFile)
+      setOriginalBuffer(buf)
+      const segs = planSegments(buf.duration, buf)
+      setSegments(segs.map((s) => ({ ...s, id: uid(), takes: [], activeTakeId: null, script: '' })))
+      notify(`Đã chia thành ${segs.length} đoạn ngắn`)
+    } catch (e) {
+      console.warn('Không giải mã được audio, dùng chia đều:', e)
+      const segs = fixedSegments(v.duration, 6)
+      setSegments(segs.map((s) => ({ ...s, id: uid(), takes: [], activeTakeId: null, script: '' })))
+      notify('Không đọc được audio gốc — đã chia đều 6 giây/đoạn')
+    } finally {
+      setAnalyzing(false)
+    }
+  }, [videoFile, notify])
 
-      tracks.forEach((track) => {
-        if (track.audio) {
-          track.audio.play();
+  useEffect(() => {
+    if (segments.length && !segments.some((s) => s.id === selectedId)) {
+      setSelectedId(segments[0].id)
+    }
+  }, [segments, selectedId])
+
+  /* ================================================================
+     2. Helpers segment
+     ================================================================ */
+  const activeTake = useCallback(
+    (seg) => (seg?.takes || []).find((t) => t.id === seg.activeTakeId) || null,
+    []
+  )
+
+  const selectedSegment = useMemo(
+    () => segments.find((s) => s.id === selectedId) || null,
+    [segments, selectedId]
+  )
+
+  const dubbedCount = segments.filter((s) => activeTake(s)).length
+
+  const seekTo = useCallback((t) => {
+    const v = videoRef.current
+    if (!v) return
+    v.currentTime = Math.max(0, Math.min(t, v.duration || 0))
+  }, [])
+
+  const updateSegment = useCallback((id, patch) => {
+    setSegments((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)))
+  }, [])
+
+  const saveTake = useCallback((segId, blob) => {
+    const url = URL.createObjectURL(blob)
+    const take = { id: uid(), url, blob, createdAt: Date.now() }
+    setSegments((prev) =>
+      prev.map((s) =>
+        s.id === segId ? { ...s, takes: [...s.takes, take], activeTakeId: take.id } : s
+      )
+    )
+    bufferCache.current.delete(take.id)
+    return take
+  }, [])
+
+  const selectTake = useCallback((segId, takeId) => {
+    setSegments((prev) =>
+      prev.map((s) => (s.id === segId ? { ...s, activeTakeId: takeId } : s))
+    )
+  }, [])
+
+  const deleteTake = useCallback((segId, takeId) => {
+    setSegments((prev) =>
+      prev.map((s) => {
+        if (s.id !== segId) return s
+        const takes = s.takes.filter((t) => t.id !== takeId)
+        return {
+          ...s,
+          takes,
+          activeTakeId: s.activeTakeId === takeId
+            ? (takes[takes.length - 1]?.id ?? null)
+            : s.activeTakeId,
         }
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // =========================
-  // PAUSE
-  // =========================
-
-  const pauseAll = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-
-    tracks.forEach((track) => {
-      if (track.audio) {
-        track.audio.pause();
-      }
-    });
-  };
-
-  // =========================
-  // RECORD
-  // =========================
-
-  const startRecording = async () => {
-    try {
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-
-      const recorder = new MediaRecorder(stream);
-
-      chunksRef.current = [];
-
-      recorder.ondataavailable = (e) => {
-        chunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, {
-          type: "audio/webm",
-        });
-
-        const url = URL.createObjectURL(blob);
-
-        const audio = new Audio(url);
-
-        const id = Date.now();
-
-        setTracks((prev) => [
-          ...prev,
-          {
-            id,
-            name: selectedVoice,
-            url,
-            audio,
-            muted: false,
-          },
-        ]);
-      };
-
-      mediaRecorderRef.current = recorder;
-
-      recorder.start();
-
-      setRecording(true);
-    } catch (err) {
-      console.error(err);
-      alert("Không mở được mic");
-    }
-  };
-
-  // =========================
-  // STOP RECORD
-  // =========================
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-    }
-
-    setRecording(false);
-  };
-
-  // =========================
-  // DELETE TRACK
-  // =========================
-
-  const deleteTrack = (id) => {
-    setTracks((prev) =>
-      prev.filter((t) => t.id !== id)
-    );
-  };
-
-  // =========================
-  // MUTE
-  // =========================
-
-  const toggleMute = (id) => {
-    setTracks((prev) =>
-      prev.map((track) => {
-        if (track.id === id) {
-          track.audio.muted = !track.muted;
-
-          return {
-            ...track,
-            muted: !track.muted,
-          };
-        }
-
-        return track;
       })
-    );
-  };
+    )
+    bufferCache.current.delete(takeId)
+  }, [])
 
+  const addSegmentAtPlayhead = useCallback(() => {
+    const v = videoRef.current
+    if (!v) return
+    const t = v.currentTime
+    const seg = {
+      id: uid(),
+      start: t,
+      end: Math.min(t + 4, v.duration),
+      takes: [],
+      activeTakeId: null,
+      script: '',
+    }
+    setSegments((prev) => [...prev, seg].sort((a, b) => a.start - b.start))
+    setSelectedId(seg.id)
+  }, [])
+
+  const removeSegment = useCallback((id) => {
+    setSegments((prev) => prev.filter((s) => s.id !== id))
+  }, [])
+
+  /* ================================================================
+     3. Phát đúng một đoạn: seek + play + tự dừng cuối đoạn
+     ================================================================ */
+  const playSegment = useCallback((id) => {
+    const v = videoRef.current
+    const s = segments.find((x) => x.id === id)
+    if (!v || !s) return
+    setSelectedId(id)
+    v.currentTime = s.start
+    segmentPlayRef.current = { start: s.start, end: s.end }
+    v.play().catch(() => {})
+  }, [segments])
+
+  const clearSegmentRange = useCallback(() => {
+    segmentPlayRef.current = null
+  }, [])
+
+  /* ================================================================
+     4. Vòng lặp đồng bộ audio take + auto-pause cuối đoạn
+     ================================================================ */
+  const audioElsRef = useRef(new Map()) // segId -> { el, takeId }
+  const activeElRef = useRef(null)
+
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v || segments.length === 0) return
+    let raf
+
+    const loop = () => {
+      const t = v.currentTime
+
+      /* ---- (A) auto-pause khi hết đoạn đang phát ---- */
+      const range = segmentPlayRef.current
+      if (range) {
+        if (t >= range.end - 0.02 || t < range.start - 0.5) {
+          v.pause()
+          segmentPlayRef.current = null
+        }
+      }
+
+      /* ---- (B) đồng bộ audio take ---- */
+      const seg = segments.find((s) => t >= s.start && t < s.end)
+      const take = seg ? activeTake(seg) : null
+
+      if (take && seg) {
+        let entry = audioElsRef.current.get(seg.id)
+        if (!entry || entry.takeId !== take.id) {
+          entry?.el.pause()
+          const el = new Audio(take.url)
+          el.preload = 'auto'
+          entry = { el, takeId: take.id }
+          audioElsRef.current.set(seg.id, entry)
+        }
+        const el = entry.el
+
+        if (activeElRef.current !== el) {
+          audioElsRef.current.forEach((e) => { if (e.el !== el) e.el.pause() })
+          activeElRef.current = el
+          el.currentTime = Math.max(0, t - seg.start)
+        }
+
+        const want = Math.max(0, t - seg.start)
+        if (Math.abs(el.currentTime - want) > 0.28) el.currentTime = want
+
+        if (v.paused) {
+          if (!el.paused) el.pause()
+        } else if (el.paused) {
+          el.currentTime = want
+          el.play().catch(() => {})
+        }
+        v.muted = true
+      } else {
+        if (activeElRef.current) {
+          activeElRef.current.pause()
+          activeElRef.current = null
+        }
+        v.muted = false
+
+        // chế độ "chỉ xem đoạn đã lồng"
+        if (skipUndubbed && seg && !v.paused) {
+          const next = segments.find((s) => s.start >= seg.end - 0.02 && activeTake(s))
+          if (next) v.currentTime = next.start
+          else v.pause()
+        }
+      }
+
+      raf = requestAnimationFrame(loop)
+    }
+
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [segments, skipUndubbed, activeTake])
+
+  /* ---- dừng audio khi đổi video ---- */
+  useEffect(() => {
+    if (!videoUrl) return
+    return () => {
+      audioElsRef.current.forEach((e) => e.el.pause())
+      audioElsRef.current.clear()
+      activeElRef.current = null
+    }
+  }, [videoUrl])
+
+  /* ================================================================
+     5. Thoát khỏi chế độ phát-đoạn khi user tự điều khiển
+     ================================================================ */
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    const onSeek = () => clearSegmentRange()
+    const onPause = () => {
+      // Nếu pause vì hết đoạn thì đã null; nếu pause thủ công cũng null
+      clearSegmentRange()
+    }
+    v.addEventListener('seeked', onSeek)
+    v.addEventListener('pause', onPause)
+    return () => {
+      v.removeEventListener('seeked', onSeek)
+      v.removeEventListener('pause', onPause)
+    }
+  }, [videoUrl, clearSegmentRange])
+
+  /* ================================================================
+     6. Space = play/pause
+     ================================================================ */
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.code !== 'Space') return
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      e.preventDefault()
+      const v = videoRef.current
+      if (!v) return
+      clearSegmentRange() // Space = phát tự do
+      v.paused ? v.play() : v.pause()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [clearSegmentRange])
+
+  /* ================================================================
+     7. Export helpers
+     ================================================================ */
+  const getTakeBuffer = useCallback(async (take) => {
+    if (bufferCache.current.has(take.id)) return bufferCache.current.get(take.id)
+    const buf = await decodeBlobToAudioBuffer(take.blob)
+    bufferCache.current.set(take.id, buf)
+    return buf
+  }, [])
+
+  const buildClips = useCallback(async () => {
+    const clips = []
+    for (const seg of segments) {
+      const take = activeTake(seg)
+      if (!take) continue
+      const buffer = await getTakeBuffer(take)
+      clips.push({ start: seg.start, end: seg.end, buffer, segId: seg.id })
+    }
+    return clips.sort((a, b) => a.start - b.start)
+  }, [segments, activeTake, getTakeBuffer])
+
+  /* ================================================================
+     RENDER
+     ================================================================ */
   return (
-    <div
-      style={{
-        background: "#111",
-        minHeight: "100vh",
-        color: "white",
-        padding: 20,
-      }}
-    >
-      <h1>Voice Video Editor</h1>
+    <div className="app">
+      <Background />
 
-      {/* IMPORT VIDEO */}
+      <header className="topbar glass">
+        <div className="brand">
+          <span className="logo" />
+          <div>
+            <h1>DubStudio</h1>
+            <p>Lồng tiếng video theo từng đoạn ngắn</p>
+          </div>
+        </div>
 
-      <label
-        style={{
-          background: "#222",
-          padding: 10,
-          display: "inline-block",
-          borderRadius: 10,
-          cursor: "pointer",
-          marginBottom: 20,
-        }}
-      >
-        <FaVideo /> Import Video
+        <div className="topbar-stats">
+          <div className="chip"><b>{segments.length}</b><span>đoạn</span></div>
+          <div className="chip accent"><b>{dubbedCount}</b><span>đã lồng</span></div>
+          <div className="chip"><b>{fmt(duration)}</b><span>thời lượng</span></div>
+        </div>
 
-        <input
-          type="file"
-          accept="video/*"
-          hidden
-          onChange={importVideo}
-        />
-      </label>
+        <label className="btn ghost file-btn">
+          <input
+            type="file"
+            accept="video/*"
+            hidden
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+          {videoUrl ? 'Đổi video' : 'Chọn video'}
+        </label>
+      </header>
 
-      {/* VIDEO */}
-
-      {videoUrl && (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          controls
-          muted
-          style={{
-            width: "100%",
-            marginBottom: 20,
-            borderRadius: 10,
-          }}
-        />
-      )}
-
-      {/* CONTROLS */}
-
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          marginBottom: 20,
-        }}
-      >
-        <button onClick={playAll}>
-          <FaPlay />
-        </button>
-
-        <button onClick={pauseAll}>
-          <FaPause />
-        </button>
-
-        {!recording ? (
-          <button onClick={startRecording}>
-            <FaMicrophone />
-            Thu Âm
-          </button>
-        ) : (
-          <button onClick={stopRecording}>
-            Dừng
-          </button>
-        )}
-
-        <select
-          value={selectedVoice}
-          onChange={(e) =>
-            setSelectedVoice(e.target.value)
-          }
-        >
-          {voices.map((voice) => (
-            <option
-              key={voice.id}
-              value={voice.name}
-            >
-              {voice.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* TRACKS */}
-
-      {tracks.map((track) => (
-        <div
-          key={track.id}
-          style={{
-            background: "#222",
-            padding: 10,
-            marginBottom: 10,
-            borderRadius: 10,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent:
-                "space-between",
-            }}
-          >
-            <input
-              value={track.name}
-              onChange={(e) => {
-                setTracks((prev) =>
-                  prev.map((t) =>
-                    t.id === track.id
-                      ? {
-                          ...t,
-                          name:
-                            e.target.value,
-                        }
-                      : t
-                  )
-                );
-              }}
-            />
-
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-              }}
-            >
-              <button
-                onClick={() =>
-                  toggleMute(track.id)
-                }
-              >
-                <FaVolumeMute />
-              </button>
-
-              <button
-                onClick={() =>
-                  deleteTrack(track.id)
-                }
-              >
-                <FaTrash />
-              </button>
-            </div>
+      <main className="layout">
+        <aside className="panel glass left">
+          <div className="panel-head">
+            <h2>Đoạn ngắn</h2>
+            <button className="mini" onClick={addSegmentAtPlayhead} disabled={!videoUrl}>
+              + Tại vị trí
+            </button>
           </div>
 
-          {/* AUDIO PLAYER */}
+          <div className="seg-list">
+            {segments.length === 0 && (
+              <p className="empty">
+                {analyzing ? 'Đang phân tích video…' : 'Chưa có đoạn nào.'}
+              </p>
+            )}
+            {segments.map((s, i) => {
+              const take = activeTake(s)
+              return (
+                <button
+                  key={s.id}
+                  className={`seg-item ${s.id === selectedId ? 'active' : ''} ${take ? 'dubbed' : ''}`}
+                  onClick={() => playSegment(s.id)}
+                >
+                  <span className="seg-index">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="seg-time">
+                    {fmt(s.start)} → {fmt(s.end)}
+                  </span>
+                  <span className={`dot ${take ? 'on' : ''}`} />
+                  {s.takes.length > 1 && <span className="take-count">{s.takes.length}</span>}
+                </button>
+              )
+            })}
+          </div>
+        </aside>
 
-          <audio
-            controls
-            src={track.url}
-            style={{
-              width: "100%",
-              marginTop: 10,
-            }}
+        <section className="center">
+          <VideoStage
+            ref={videoRef}
+            videoUrl={videoUrl}
+            onLoadedMetadata={handleLoadedMetadata}
+            onFile={handleFile}
+            hasSegments={segments.length > 0}
+            skipUndubbed={skipUndubbed}
+            setSkipUndubbed={setSkipUndubbed}
+            dubbedCount={dubbedCount}
+            analyzing={analyzing}
+            onManualToggle={clearSegmentRange}
           />
-        </div>
-      ))}
-    </div>
-  );
-};
 
-export default VoiceVideoEditor;
+          <Timeline
+            segments={segments}
+            duration={duration}
+            selectedId={selectedId}
+            activeTake={activeTake}
+            videoRef={videoRef}
+            onSelect={playSegment}
+          />
+        </section>
+
+        <aside className="right">
+          <DubPanel
+            segment={selectedSegment}
+            videoRef={videoRef}
+            onUpdate={updateSegment}
+            onSaveTake={saveTake}
+            onSelectTake={selectTake}
+            onDeleteTake={deleteTake}
+            notify={notify}
+          />
+
+          <ExportPanel
+            segments={segments}
+            activeTake={activeTake}
+            originalBuffer={originalBuffer}
+            videoRef={videoRef}
+            duration={duration}
+            buildClips={buildClips}
+            renderMix={renderMix}
+            notify={notify}
+          />
+        </aside>
+      </main>
+
+      {toast && <div className="toast glass">{toast}</div>}
+    </div>
+  )
+}

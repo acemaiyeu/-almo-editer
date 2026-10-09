@@ -1,0 +1,22 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: rioalmo
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: text-to-speedch
+service: my-tts-service
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-southeast-1
+
+functions:
+  tts:
+    handler: handler.tts
+    events:
+      - http:
+          path: api/tts
+          method: post
+          cors: true
+
+plugins:
+  - serverless-offline

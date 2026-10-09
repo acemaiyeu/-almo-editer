@@ -3,7 +3,7 @@ import '../../style/IPhone17ProMaxKaraoke.scss';
 import { showDynamic } from '../../app/ComponentSupport/functions';
 import { useDispatch } from 'react-redux';
 import { resetDynamic } from '../../app/features/dynamicIslandSlice';
-import JSZip from 'jszip'; // Thêm thư viện JSZip để nén và giải nén file
+import JSZip from 'jszip'; 
 
 export default function IphoneKaraoke() {
   const [activeTab, setActiveTab] = useState('karaoke');
@@ -15,11 +15,11 @@ export default function IphoneKaraoke() {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  const [audioFileRaw, setAudioFileRaw] = useState(null); // Lưu trữ file nhạc gốc phục vụ cho việc đóng gói ZIP
-const [showKeyboard, setShowKeyBoard] = useState(true)
-  // Khai báo dữ liệu gốc dạng mảng phẳng
-  const [rawSongLyrics, setRawSongLyrics] = useState([]);
+  const [audioFileRaw, setAudioFileRaw] = useState(null); 
+  const [showKeyboard, setShowKeyBoard] = useState(true);
 
+  // States dữ liệu lyrics
+  const [rawSongLyrics, setRawSongLyrics] = useState([]);
   const [songLyrics, setSongLyrics] = useState([]);
 
   // States của Tab Karaoke
@@ -36,6 +36,10 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [currentStudioLineId, setCurrentStudioLineId] = useState(1);
 
+  // 🛠️ Thêm State phục vụ chỉnh sửa thời gian thủ công
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
+
   const audioRef = useRef(null);
   const animationFrameRef = useRef(null);
 
@@ -50,6 +54,11 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
         lineMap[word.lineId] = [];
       }
       lineMap[word.lineId].push({ text: word.text, time: word.time });
+    });
+
+    // Sắp xếp lại danh sách các từ trong cùng một dòng theo thứ tự thời gian tăng dần để tránh lỗi sub bay ngược
+    Object.keys(lineMap).forEach(id => {
+      lineMap[id].sort((a, b) => a.time - b.time);
     });
 
     const orderedLineIds = Object.keys(lineMap).map(Number).sort((a, b) => a - b);
@@ -75,7 +84,7 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
     });
   };
 
-  // Tự động phân dòng ban đầu
+  // Tự động phân dòng ban đầu hoặc khi cập nhật dữ liệu thủ công
   useEffect(() => {
     if (rawSongLyrics.length > 0) {
       const structured = buildLyricsStructure(rawSongLyrics);
@@ -120,7 +129,7 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
   const handleAudioUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAudioFileRaw(file); // Lưu giữ tham chiếu file nhị phân thô để nén zip
+      setAudioFileRaw(file); 
       setAudioUrl(URL.createObjectURL(file));
       setAudioName(file.name);
       setIsPlaying(false);
@@ -133,7 +142,7 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
     if (!audioUrl) return;
     
     if (isPlaying) {
-        showDynamic(dispatch, "", 1,"")
+      showDynamic(dispatch, "", 1,"");
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
@@ -185,8 +194,6 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
         setKeyboardWords(songLyrics[nextIdx].words || []);
         setUpcomingWords(songLyrics[nextIdx].words || []);
       } else {
-        setIsPlaying(false);
-        audioRef.current.pause();
         setKeyboardWords([]);
       }
       return;
@@ -201,6 +208,7 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
   };
 
   const triggerWordFlyAnimation = (text) => {
+    if (!text || text.trim() === '') return; 
     const cleanId = text.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     const keyElement = document.querySelector(`.key-${cleanId}`);
     const targetElement = document.querySelector('.fly-target-zone');
@@ -244,12 +252,37 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
     setCurrentStudioLineId(1);
   };
 
-  // Ghi nhận sự kiện Space/Enter
+  // Lắng nghe phím bấm hệ thống
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (activeTab !== 'studio' || studioWords.length === 0) return;
+      if (activeTab !== 'studio') return;
+      
+      // Chặn nhận phím tắt nếu người dùng đang gõ nhập số chỉnh sửa time trực tiếp
+      if (editingIndex !== null) return;
+
+      // Nhấn phím K để chèn đoạn dạo nhạc
+      if (e.key === 'k' || e.key === 'K') {
+        if (!isPlaying || !audioRef.current) return;
+        e.preventDefault();
+
+        const currentTimeStamp = Number(audioRef.current.currentTime.toFixed(2));
+        const blankWord = {
+          text: " ", 
+          time: currentTimeStamp,
+          lineId: currentStudioLineId,
+          isLineEnd: false
+        };
+
+        const updatedWords = [...studioWords];
+        updatedWords.splice(recordingIndex, 0, blankWord);
+        
+        setStudioWords(updatedWords);
+        setRecordingIndex(prev => prev + 1); 
+        return;
+      }
 
       if (e.code === 'Space') {
+        if (studioWords.length === 0) return;
         e.preventDefault(); 
         
         if (!isPlaying && audioUrl && recordingIndex === 0) {
@@ -269,6 +302,7 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
       }
 
       if (e.code === 'Enter') {
+        if (studioWords.length === 0) return;
         e.preventDefault();
         const lastRecordedIdx = recordingIndex - 1 >= 0 ? recordingIndex - 1 : 0;
         
@@ -288,7 +322,7 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
     };
 
     const handleKeyUp = (e) => {
-      if (activeTab !== 'studio' || e.code !== 'Space') return;
+      if (activeTab !== 'studio' || e.code !== 'Space' || studioWords.length === 0 || editingIndex !== null) return;
       e.preventDefault();
       
       if (isSpacePressed) {
@@ -305,7 +339,25 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [activeTab, isPlaying, recordingIndex, studioWords, isSpacePressed, audioUrl, currentStudioLineId]);
+  }, [activeTab, isPlaying, recordingIndex, studioWords, isSpacePressed, audioUrl, currentStudioLineId, editingIndex]);
+
+  // 🛠️ HÀM MỚI: Kích hoạt chế độ chỉnh sửa thời gian thủ công khi Click vào Badge
+  const startInlineEditTime = (index, currentTimeVal) => {
+    setEditingIndex(index);
+    setEditingValue(currentTimeVal !== null ? currentTimeVal.toString() : '0');
+  };
+
+  // 🛠️ HÀM MỚI: Lưu giá trị thời gian thủ công vừa sửa đổi vào mảng dữ liệu gốc
+  const saveInlineEditTime = (index) => {
+    const parsedTime = parseFloat(editingValue);
+    if (!isNaN(parsedTime)) {
+      const updatedWords = [...studioWords];
+      updatedWords[index].time = Number(parsedTime.toFixed(2));
+      
+      setStudioWords(updatedWords);
+    }
+    setEditingIndex(null);
+  };
 
   const saveStudioDataToKaraoke = () => {
     const structured = buildLyricsStructure(studioWords);
@@ -329,27 +381,17 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
   };
 
   useEffect(() => {
-    // LỌC ĐIỀU KIỆN CHẶN: Chỉ xử lý khi nhạc bắt đầu phát thực sự
     if (isPlaying !== true) return;
 
     const audioElement = audioRef.current;
     if (!audioElement || !audioUrl) return;
 
-    // Hàm xử lý lấy giá trị chốt hạ
     const handleGetDuration = () => {
       const durationInSeconds = audioElement.duration;
-      console.log("audioElement.duration", audioElement.duration);
-      // Cập nhật timeline hiển thị (đơn vị: giây)
       setDuration(durationInSeconds);
-
-      // Đổi sang mili-giây
       const durationInMilliseconds = Math.round(durationInSeconds * 1000); 
       
-      // Kiểm tra nếu ra số quá nhỏ (như số 2) do chưa load kịp thì bỏ qua không lấy
       if (durationInMilliseconds > 100) {
-        console.log("🎯 ĐÃ LẤY ĐƯỢC GIÁ TRỊ CUỐI CÙNG KHI MỚI CHẠY:", durationInMilliseconds, "ms");
-
-        // Đẩy sang hàm hiển thị dynamic của bạn
         showDynamic(
           dispatch,
           audioName.replaceAll(".wav","").replaceAll(".mp3",""),
@@ -359,11 +401,9 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
       }
     };
 
-    // Nếu trình duyệt đã có sẵn dữ liệu thời gian của file, tóm lấy luôn
     if (audioElement.readyState >= 1) {
       handleGetDuration();
     } else {
-      // Nếu chưa có, bắt buộc đợi sự kiện loadedmetadata kích hoạt đúng 1 lần rồi lấy
       audioElement.addEventListener('loadedmetadata', handleGetDuration, { once: true });
     }
 
@@ -372,28 +412,17 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
     };
   }, [isPlaying]); 
 
-  // =========================================================
-  // 🆕 TÍNH NĂNG THÊM MỚI: EXPORT DỰ ÁN THÀNH FILE .ZIP
-  // =========================================================
   const exportToZipProject = async () => {
     try {
       const zip = new JSZip();
-      
-      // 1. Chuyển đổi mảng cấu trúc studioWords hiện tại thành chuỗi JSON
       const lyricsJsonString = JSON.stringify(studioWords, null, 2);
       zip.file("lyrics_timeline.json", lyricsJsonString);
       
-      // 2. Kiểm tra xem người dùng đã upload nhạc chưa, nếu rồi đóng gói luôn file thô nhị phân
       if (audioFileRaw) {
         zip.file(audioName, audioFileRaw);
-      } else {
-        console.warn("⚠️ Không tìm thấy file nhạc nền thô, ZIP xuất ra sẽ chỉ có dữ liệu JSON lời.");
       }
 
-      // 3. Tiến hành build nén file ZIP
       const contentBlob = await zip.generateAsync({ type: "blob" });
-      
-      // 4. Tạo đường link ảo để kích hoạt download file tự động về máy tính
       const downloadLink = document.createElement("a");
       downloadLink.href = URL.createObjectURL(contentBlob);
       const cleanName = audioName ? audioName.split('.')[0] : "almo_karaoke";
@@ -401,16 +430,11 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
-      
-      console.log("📥 Đã xuất thành công gói dự án ZIP hoàn chỉnh!");
     } catch (error) {
-      console.error("Lỗi trong quá trình nén và xuất file ZIP:", error);
+      console.error("Lỗi xuất file ZIP:", error);
     }
   };
 
-  // =========================================================
-  // 🆕 TÍNH NĂNG THÊM MỚI: IMPORT NGƯỢC FILE .ZIP VÀO HỆ THỐNG
-  // =========================================================
   const handleImportZipProject = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -418,32 +442,25 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
     try {
       const zip = new JSZip();
       const unzippedData = await zip.loadAsync(file);
-      
       let importedLyrics = null;
       let importedAudioFile = null;
       let detectedAudioName = "";
 
-      // Duyệt qua tất cả các file có bên trong gói ZIP vừa tải lên
       for (const relativePath in unzippedData.files) {
         const zipEntry = unzippedData.files[relativePath];
-        
         if (zipEntry.name === "lyrics_timeline.json") {
-          // Đọc nội dung file JSON lời bài hát
           const jsonText = await zipEntry.async("string");
           importedLyrics = JSON.parse(jsonText);
         } else if (zipEntry.name.endsWith(".mp3") || zipEntry.name.endsWith(".wav") || zipEntry.name.endsWith(".m4a")) {
-          // Đọc nội dung file nhạc nền
           const audioBlob = await zipEntry.async("blob");
           detectedAudioName = zipEntry.name;
-          // Tạo một đối tượng File hoàn chỉnh từ Blob nhị phân để lưu vào state
           importedAudioFile = new File([audioBlob], detectedAudioName, { type: "audio/mpeg" });
         }
       }
 
-      // Cập nhật dữ liệu vào các state của ứng dụng để đồng bộ lại giao diện
       if (importedLyrics) {
         setStudioWords(importedLyrics);
-        setRawSongLyrics(importedLyrics); // Đồng bộ sang karaoke
+        setRawSongLyrics(importedLyrics); 
         
         const stamped = importedLyrics.filter(w => w.time !== null);
         setRecordingIndex(stamped.length);
@@ -462,10 +479,10 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
       }
 
       alert("📤 Đã khôi phục toàn bộ dự án từ file ZIP thành công!");
-      e.target.value = ""; // Reset input file
+      e.target.value = ""; 
     } catch (error) {
-      console.error("Lỗi khi giải nén hoặc phân tích file ZIP dự án:", error);
-      alert("Cấu trúc file ZIP tải lên không hợp lệ hoặc bị lỗi dữ liệu!");
+      console.error("Lỗi import ZIP:", error);
+      alert("Cấu trúc file ZIP tải lên không hợp lệ!");
     }
   };
 
@@ -473,16 +490,15 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
     <div className="layout-root-container">
       {audioUrl && (
         <audio 
-            ref={audioRef} 
-            src={audioUrl} 
-            onEnded={() => {
-                setIsPlaying(false);
-                setCurrentTime(0);
-            }}
-            />
+          ref={audioRef} 
+          src={audioUrl} 
+          onEnded={() => {
+            setIsPlaying(false);
+            setCurrentTime(0);
+          }}
+        />
       )}
 
-      {/* THANH TAB ĐIỀU KHIỂN NẰM NGOÀI CÙNG CỦA ỨNG DỤNG */}
       <div className="global-tab-navigation">
         <button 
           onClick={() => setActiveTab('karaoke')}
@@ -498,15 +514,12 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
         </button>
       </div>
 
-      {/* NỘI DUNG THAY ĐỔI THEO TAB */}
       <div className="global-content-body">
         
-        {/* --- TAB 1: PHÒNG KARAOKE - CHỈ HIỂN THỊ IPHONE --- */}
         {activeTab === 'karaoke' && (
           <div className="iphone-wrapper-center">
             <div className="iphone-chassis">
               <div className="iphone-screen">
-                
                 <div className="phone-dynamic-body">
                   <div className="karaoke-tab-view">
                     <div className="display-lyrics-center">
@@ -531,6 +544,8 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
                             const isUpcoming = upcomingWords.some(w => w.text === word.text && w.time === word.time);
                             const keyId = word.text.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
+                            if(word.text.trim() === '') return null;
+
                             return (
                               <div
                                 key={index}
@@ -549,7 +564,6 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
                     </div>}
                   </div>
 
-                  {/* Thanh Audio control nằm gọn bên trong iPhone đối với tab Karaoke */}
                   {!isPlaying && <div className="bottom-audio-controller">
                       <div className="audio-name-display">🎵 {audioName}</div>
                     <button
@@ -560,20 +574,17 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
                       {isPlaying ? '⏸ TẠM DỪNG NHẠC' : '▶ PHÁT BÀI HÁT'}
                     </button>
                   </div>}
-
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* --- TAB 2: SETUP LỜI (STUDIO) - HIỂN THỊ RỘNG RÃI Ở NGOÀI BÌNH THƯỜNG --- */}
         {activeTab === 'studio' && (
           <div className="studio-fullscreen-view">
             <div className="studio-header-panel">
               <h2>⚙️ HỆ THỐNG GHIM TIME & ĐỒNG BỘ LỜI</h2>
               
-              {/* KHU VỰC THÊM MỚI: CÁC NÚT IMPORT / EXPORT ĐÓNG GÓI DỰ ÁN DẠNG ZIP */}
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <button 
                   onClick={exportToZipProject} 
@@ -599,7 +610,6 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
             </div>
 
             <div className="studio-workspace-layout">
-              {/* Bên trái: Nhập text thô & Controller nhạc */}
               <div className="workspace-left-panel">
                 <div className="step-block">
                   <label className="step-label">BƯỚC 1: NHẬP VĂN BẢN THÔ</label>
@@ -650,10 +660,9 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
                 </div>
               </div>
 
-              {/* Bên phải: Lưới chữ ghim thời gian rộng rãi */}
               <div className="workspace-right-panel">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <label className="step-label">BƯỚC 2: ẤN [SPACE] ĐỂ GHIM TIME & [ENTER] ĐỂ NGẮT DÒNG</label>
+                  <label className="step-label">BƯỚC 2: ẤN [SPACE] GHIM TIME, [K] DẠO NHẠC, CLICK VÀO SỐ GIÂY ĐỂ TỰ CHỈNH</label>
                   <span className="current-line-indicator">DÒNG HIỆN TẠI: #{currentStudioLineId}</span>
                 </div>
                 
@@ -661,10 +670,35 @@ const [showKeyboard, setShowKeyBoard] = useState(true)
                   {studioWords.map((item, idx) => (
                     <div 
                       key={idx} 
-                      className={`word-badge ${idx === recordingIndex && isPlaying ? 'recording' : ''} ${item.time ? 'stamped' : ''} ${item.isLineEnd ? 'badge-line-end' : ''}`}
+                      className={`word-badge ${idx === recordingIndex && isPlaying ? 'recording' : ''} ${item.time !== null ? 'stamped' : ''} ${item.isLineEnd ? 'badge-line-end' : ''}`}
                     >
-                      <span className="txt">{item.text}</span>
-                      <span className="tm">{item.time ? `${item.time}s (L#${item.lineId})` : `--- (L#${item.lineId})`}</span>
+                      <span className="txt">{item.text.trim() === '' ? '[DẠO NHẠC]' : item.text}</span>
+                      
+                      {/* 🛠️ KHU VỰC THAY ĐỔI: Cho phép sửa time linh hoạt */}
+                      {editingIndex === idx ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="inline-edit-time-input"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => saveInlineEditTime(idx)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveInlineEditTime(idx);
+                          }}
+                          autoFocus
+                          style={{ width: '65px', background: '#1f2937', color: '#10b981', border: '1px solid #10b981', borderRadius: '4px', textAlign: 'center', fontSize: '11px', padding: '2px' }}
+                        />
+                      ) : (
+                        <span 
+                          className="tm" 
+                          onClick={() => startInlineEditTime(idx, item.time)}
+                          style={{ cursor: 'pointer', textDecoration: 'underline dotted', color: item.time ? '#10b981' : '#9ca3af' }}
+                          title="Click để sửa lại thời gian"
+                        >
+                          {item.time !== null ? `${item.time}s (L#${item.lineId})` : `--- (L#${item.lineId})`}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>

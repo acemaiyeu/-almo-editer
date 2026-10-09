@@ -6,6 +6,7 @@ import '../../style/DynamicIsland.css';
 const DynamicIsland = () => {
   const dispatch = useDispatch();
   const { content, notifi, time_show, title } = useSelector((state) => state.dynamic);
+  const { nameEffectActive } = useSelector((state) => state.public);
   const [isActive, setIsActive] = useState(false);
   const audio = document.getElementById("audio");
   const setting = useSelector((state) => state.setting);
@@ -85,6 +86,9 @@ useEffect(() => {
 useEffect(() => {
       document.title = formatMsToMinutesAndSeconds(showTime)
   },[showTime]) 
+  if(nameEffectActive === "recoding_video"){
+    return <></>
+  }
   return (
 
     <div className="di-wrapper">

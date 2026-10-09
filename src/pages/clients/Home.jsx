@@ -5,9 +5,10 @@ import TimeLineComponent2 from "./ComponentFunction/TimeLineComponent2.jsx";
 import VideoPlayer from "./ComponentFunction/VideoPlayer.jsx";
 import '../../style/effect.css'
 import { showDynamic } from "../../app/ComponentSupport/functions.js";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import DynamicIsland from "./DynamicIsland.jsx";
 const Home = () => {
+  const {nameEffectActive} = useSelector((state) => state.public)
     const effect_custom = localStorage.getItem("effect_custom");
      const styleElementRef = useRef(null);
     
@@ -39,7 +40,8 @@ const Home = () => {
                 <FunctionComponent />
                 {/* <VideoPlayer /> */}
             </div>
-            <TimeLineComponent2 />
+            {nameEffectActive === "mainscreen" && 
+            <TimeLineComponent2 />}
         </div>
     )
 }
