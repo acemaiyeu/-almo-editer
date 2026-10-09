@@ -10,9 +10,9 @@ import JSZip from 'jszip';
 import { updateDynamic } from '../../app/features/dynamicIslandSlice';
 import LyricMaker from './LyricMaker';
 import ZingMp3KaraokePlayer from './ZingMp3KaraokePlayer';
-
 // ===== Load lamejs từ CDN =====
 let lamejsPromise = null;
+ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 const loadLamejs = () => {
   if (lamejsPromise) return lamejsPromise;
   lamejsPromise = new Promise((resolve, reject) => {

@@ -1,3 +1,11 @@
+if (typeof self !== 'undefined' && typeof document === 'undefined') {
+  self.document = {
+    createElement: () => ({}),
+    getElementsByTagName: () => [],
+    head: {},
+    body: {}
+  };
+}
 import { useEffect } from 'react'
 import './App.css'
 import { Route, Routes } from 'react-router-dom'
